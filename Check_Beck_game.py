@@ -82,14 +82,14 @@ class Player(pygame.sprite.Sprite):
         self.image = load_image('player.png')
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
 
-    def update(self, event):
-        if event.key == pygame.K_w:
+    def update(self, direction):
+        if direction == 'up':
             self.rect = self.rect.move(0, -25)
-        if event.key == pygame.K_s:
+        if direction == 'down':
             self.rect = self.rect.move(0, 25)
-        if event.key == pygame.K_d:
+        if direction == 'right':
             self.rect = self.rect.move(25, 0)
-        if event.key == pygame.K_a:
+        if direction == 'left':
             self.rect = self.rect.move(-25, 0)
 
 
@@ -151,9 +151,11 @@ GameMap = GameMap(5, 7)
 player, level_x, level_y = generate_level(load_level('map.txt'))
 
 
-
+clock = pygame.time.Clock()
+time = 0
 camera = Camera()
 running = True
+move = False
 while running:
     camera.update(player)
     for sprite in all_sprites:
@@ -162,12 +164,28 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.KEYDOWN:
-            player.update(event)
+            if event.key == pygame.K_w:
+                direction = 'up'
+            elif event.key == pygame.K_s:
+                direction = 'down'
+            elif event.key == pygame.K_a:
+                direction = 'left'
+            elif event.key == pygame.K_d:
+                direction = 'right'
+            move = True
+        if event.type == pygame.KEYUP:
+            direction = None
+            move = False
 
+    time += clock.tick()
+    if move and time >= 100:
+        player.update(direction)
+        time = 0
 
     GameMap.render()
     all_sprites.draw(screen)
     player_group.draw(screen)
 
-
     pygame.display.flip()
+
+pygame.quit()
