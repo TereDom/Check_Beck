@@ -35,6 +35,8 @@ def generate_level(level):
                 Tile('empty', x, y)
             elif level[y][x] == '#':
                 Tile('wall', x, y)
+            elif level[y][x] == '!':
+                Tile("chest", x, y)
             elif level[y][x] == '@':
                 Tile('empty', x, y)
                 new_player = Player(x, y)
@@ -86,13 +88,14 @@ class Player(pygame.sprite.Sprite):
 
     def update(self, event):
         if event.key == pygame.K_w:
-            self.rect = self.rect.move(0, -50)
+            self.rect = self.rect.move(0, -25)
         if event.key == pygame.K_s:
-            self.rect = self.rect.move(0, 50)
+            self.rect = self.rect.move(0, 25)
         if event.key == pygame.K_d:
-            self.rect = self.rect.move(50, 0)
+            self.rect = self.rect.move(25, 0)
         if event.key == pygame.K_a:
-            self.rect = self.rect.move(-50, 0)
+            self.rect = self.rect.move(-25, 0)
+
 
 
 class Camera:
@@ -156,7 +159,9 @@ while running:
             running = False
         if event.type == pygame.KEYDOWN:
             player.update(event)
+
     GameMap.render()
     all_sprites.draw(screen)
     player_group.draw(screen)
+
     pygame.display.flip()
