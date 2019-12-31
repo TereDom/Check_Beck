@@ -24,6 +24,9 @@ def load_level(filename):
     return level_map
 
 
+BOARD = list(map(lambda row: list(row), load_level('map.txt')))
+
+
 def generate_level(level):
     new_player, x, y = None, None, None
     for y in range(len(level)):
@@ -51,7 +54,6 @@ class GameMap:
     def __init__(self, width, height):
         self.width = width
         self.height = height
-        self.board = list(load_level('map.txt'))
         self.left = 0
         self.top = 0
         self.cell_size = 0
@@ -77,38 +79,34 @@ class Player(pygame.sprite.Sprite):
         self.image = player_image
         self.inventory = dict()
         self.weapons = list()
+        self.x = pos_x
+        self.y = pos_y
         self.image = load_image('Player.png')
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
 
     def update(self, event):
         if event.key == pygame.K_w:
-            self.rect = self.rect.move(0, -25)
+            self.rect = self.rect.move(0, -50)
         if event.key == pygame.K_s:
-            self.rect = self.rect.move(0, 25)
+            self.rect = self.rect.move(0, 50)
         if event.key == pygame.K_d:
-            self.rect = self.rect.move(25, 0)
+            self.rect = self.rect.move(50, 0)
         if event.key == pygame.K_a:
-            self.rect = self.rect.move(-25, 0)
-
+            self.rect = self.rect.move(-50, 0)
 
 
 class Camera:
-    # зададим начальный сдвиг камеры
     def __init__(self):
         self.dx = 0
         self.dy = 0
 
-    # сдвинуть объект obj на смещение камеры
     def apply(self, obj):
         obj.rect.x += self.dx
         obj.rect.y += self.dy
 
-    # позиционировать камеру на объекте target
     def update(self, target):
         self.dx = -(target.rect.x + target.rect.w // 2 - width // 2)
         self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
-
-
 
 
 class Bat(Creatures):
@@ -142,12 +140,9 @@ class Chest:
         self.loot_num = loot_num
 
 
-
-
 player_image = load_image('Player.png')
 GameMap = GameMap(5, 7)
 player, level_x, level_y = generate_level(load_level('map.txt'))
-
 
 
 camera = Camera()
@@ -161,11 +156,7 @@ while running:
             running = False
         if event.type == pygame.KEYDOWN:
             player.update(event)
-
-
     GameMap.render()
     all_sprites.draw(screen)
     player_group.draw(screen)
-
-
     pygame.display.flip()
