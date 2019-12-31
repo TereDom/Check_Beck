@@ -32,6 +32,8 @@ def generate_level(level):
                 Tile('empty', x, y)
             elif level[y][x] == '#':
                 Tile('wall', x, y)
+            elif level[y][x] == '!':
+                Tile("chest", x, y)
             elif level[y][x] == '@':
                 Tile('empty', x, y)
                 new_player = Player(x, y)
@@ -77,7 +79,7 @@ class Player(pygame.sprite.Sprite):
         self.image = player_image
         self.inventory = dict()
         self.weapons = list()
-        self.image = load_image('Player.png')
+        self.image = load_image('player.png')
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
 
     def update(self, event):
