@@ -34,8 +34,6 @@ def generate_level(level):
                 Tile('wall', x, y)
             elif level[y][x] == '!':
                 Tile("chest", x, y)
-            elif level[y][x] == '/':
-                Tile('darckness', x, y)
             elif level[y][x] == '@':
                 Tile('empty', x, y)
                 new_player = Player(x, y, load_level('map.txt'))
@@ -45,7 +43,7 @@ def generate_level(level):
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
         tile_images = {'wall': load_image('wall.png'), 'empty': load_image('floor.png'),
-                       'chest': load_image('close_chest.png'), 'darkness': load_image('darckness.png')}
+                       'chest': load_image('close_chest.png')}
         super().__init__(tiles_group, all_sprites)
         self.image = tile_images[tile_type]
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
@@ -66,8 +64,7 @@ class GameMap:
         self.cell_size = cell_size
 
     def render(self):
-        all_sprites.draw(screen)
-        player_group.draw(screen)
+        pass
 
 
 class Creatures:
@@ -80,7 +77,6 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y, map):
         super().__init__(player_group, all_sprites)
         self.image = player_image
-        self.mask = pygame.mask.from_surface(self.image)
         self.inventory = dict()
         self.weapons = list()
         self.x, self.y = pos_x, pos_y
@@ -105,23 +101,29 @@ class Player(pygame.sprite.Sprite):
             self.rect = self.rect.move(25, 0)
             self.x += 0.5
         if (direction == 'left' and self.map[y][x + (1 if self.x % 1 != 0 else 0) - 1] != '#' and
-                self.map[y + (1 if self.y % 1 != 0 else 0)][x + (1 if self.x % 1 != 0 else 0) - 1] != '#sssssss'):
+                self.map[y + (1 if self.y % 1 != 0 else 0)][x + (1 if self.x % 1 != 0 else 0) - 1] != '#'):
             self.rect = self.rect.move(-25, 0)
             self.x -= 0.5
 
 
+
 class Camera:
+    # зададим начальный сдвиг камеры
     def __init__(self):
         self.dx = 0
         self.dy = 0
 
+    # сдвинуть объект obj на смещение камеры
     def apply(self, obj):
         obj.rect.x += self.dx
         obj.rect.y += self.dy
 
+    # позиционировать камеру на объекте target
     def update(self, target):
         self.dx = -(target.rect.x + target.rect.w // 2 - width // 2)
         self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
+
+
 
 
 class Bat(Creatures):
@@ -153,6 +155,8 @@ class Chest:
         self.coords = coords
         self.loot_name = loot_name
         self.loot_num = loot_num
+
+
 
 
 player_image = load_image('Player.png')
