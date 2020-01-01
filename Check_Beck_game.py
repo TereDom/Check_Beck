@@ -156,6 +156,7 @@ time = 0
 camera = Camera()
 running = True
 move = False
+direction = None
 while running:
     camera.update(player)
     for sprite in all_sprites:
@@ -166,17 +167,35 @@ while running:
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_w:
                 direction = 'up'
+                move = True
             elif event.key == pygame.K_s:
                 direction = 'down'
+                move = True
             elif event.key == pygame.K_a:
                 direction = 'left'
+                move = True
             elif event.key == pygame.K_d:
                 direction = 'right'
-            move = True
+                move = True
         if event.type == pygame.KEYUP:
             direction = None
+    if direction is None:
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_w]:
+            direction = "up"
+            move = True
+        elif keys[pygame.K_s]:
+            direction = 'down'
+            move = True
+        elif keys[pygame.K_a]:
+            direction = 'left'
+            move = True
+        elif keys[pygame.K_d]:
+            direction = 'right'
+            move = True
+        else:
+            direction = None
             move = False
-
     time += clock.tick()
     if move and time >= 100:
         player.update(direction)
