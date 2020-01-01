@@ -37,16 +37,29 @@ def generate_level(level):
                 Tile('wall', x, y)
             elif level[y][x] == '!':
                 Tile("chest", x, y)
+            elif level[y][x] == '/':
+                Tile('darckness', x, y)
             elif level[y][x] == '@':
                 Tile('empty', x, y)
                 new_player = Player(x, y)
     return new_player, x, y
 
 
+def find_derection(event):
+    if event == pygame.K_w:
+        return 'up'
+    elif event == pygame.K_s:
+        return 'down'
+    elif event == pygame.K_a:
+        return 'left'
+    elif event == pygame.K_d:
+        return 'right'
+
+
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
         tile_images = {'wall': load_image('wall.png'), 'empty': load_image('floor.png'),
-                       'chest': load_image('close_chest.png')}
+                       'chest': load_image('close_chest.png'), 'darkness': load_image('darckness.png')}
         super().__init__(tiles_group, all_sprites)
         self.image = tile_images[tile_type]
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
@@ -56,6 +69,7 @@ class GameMap:
     def __init__(self, width, height):
         self.width = width
         self.height = height
+        self.board = list(load_level('map.txt'))
         self.left = 0
         self.top = 0
         self.cell_size = 0
@@ -66,7 +80,8 @@ class GameMap:
         self.cell_size = cell_size
 
     def render(self):
-        pass
+        all_sprites.draw(screen)
+        player_group.draw(screen)
 
 
 class Creatures:
@@ -79,6 +94,7 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(player_group, all_sprites)
         self.image = player_image
+        self.mask = pygame.mask.from_surface(self.image)
         self.inventory = dict()
         self.weapons = list()
         self.x = pos_x
@@ -86,16 +102,15 @@ class Player(pygame.sprite.Sprite):
         self.image = load_image('Player.png')
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
 
-    def update(self, event):
-        if event.key == pygame.K_w:
+    def update(self, direction):
+        if direction == 'up':
             self.rect = self.rect.move(0, -25)
-        if event.key == pygame.K_s:
+        if direction == 'down':
             self.rect = self.rect.move(0, 25)
-        if event.key == pygame.K_d:
+        if direction == 'right':
             self.rect = self.rect.move(25, 0)
-        if event.key == pygame.K_a:
+        if direction == 'left':
             self.rect = self.rect.move(-25, 0)
-
 
 
 class Camera:
@@ -148,8 +163,12 @@ GameMap = GameMap(5, 7)
 player, level_x, level_y = generate_level(load_level('map.txt'))
 
 
+clock = pygame.time.Clock()
+time = 0
 camera = Camera()
 running = True
+move = False
+direction = None
 while running:
     camera.update(player)
     for sprite in all_sprites:
@@ -158,10 +177,20 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.KEYDOWN:
-            player.update(event)
+            direction = find_derection(event.key)
+            move = True
+        if event.type == pygame.KEYUP:
+            direction = None
+    if direction is None:
+        keys = pygame.key.get_pressed()
+        direction = find_derection(keys)
+        move = True
+    time += clock.tick()
+    if move and time >= 100:
+        player.update(direction)
+        time = 0
 
     GameMap.render()
-    all_sprites.draw(screen)
-    player_group.draw(screen)
-
     pygame.display.flip()
+
+pygame.quit()
