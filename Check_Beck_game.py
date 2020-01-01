@@ -4,6 +4,7 @@ import os
 
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
+player_group = pygame.sprite.Group()
 size = width, height = 500, 400
 screen = pygame.display.set_mode(size)
 tile_width = tile_height = 50
@@ -35,7 +36,7 @@ def generate_level(level):
                 Tile("chest", x, y)
             elif level[y][x] == '@':
                 Tile('empty', x, y)
-    new_player = Player(3, 3, load_level('map.txt'))
+                new_player = Player(x, y, load_level('map.txt'))
     return new_player, x, y
 
 
@@ -74,7 +75,7 @@ class Creatures:
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y, map):
-        super().__init__(all_sprites)
+        super().__init__(player_group, all_sprites)
         self.image = player_image
         self.inventory = dict()
         self.weapons = list()
@@ -170,6 +171,8 @@ running = True
 move = False
 direction = None
 while running:
+
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -209,12 +212,15 @@ while running:
     if move and time >= 100:
         player.update(direction)
         time = 0
-    camera.update(player)
     for sprite in all_sprites:
         camera.apply(sprite)
 
     gamemap.render()
+
     all_sprites.draw(screen)
+    player_group.draw(screen)
+
+
 
     pygame.display.flip()
 
