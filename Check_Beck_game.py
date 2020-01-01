@@ -1,5 +1,6 @@
 import pygame
 import os
+import random
 
 
 all_sprites = pygame.sprite.Group()
@@ -7,6 +8,7 @@ tiles_group = pygame.sprite.Group()
 size = width, height = 500, 400
 screen = pygame.display.set_mode(size)
 tile_width = tile_height = 50
+CHEST_LOOT = ['potion', 'ammo', 'key']
 
 
 def load_image(name, colorkey=None):
@@ -33,7 +35,7 @@ def generate_level(level):
                 Tile('wall', x, y)
             elif level[y][x] == '!':
                 Tile("empty", x, y)
-                Tile("chest", x, y)
+                Tile("close_chest", x, y)
             elif level[y][x] == '@':
                 Tile('empty', x, y)
     new_player = Player(3, 3, load_level('map.txt'))
@@ -42,8 +44,7 @@ def generate_level(level):
 
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
-        tile_images = {'wall': load_image('wall.png'), 'empty': load_image('floor.png'),
-                       'chest': load_image('close_chest.png')}
+        tile_images = {'wall': load_image('wall.png'), 'empty': load_image('floor.png')}
         super().__init__(tiles_group, all_sprites)
         self.image = tile_images[tile_type]
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
@@ -111,17 +112,14 @@ class Player(pygame.sprite.Sprite):
 
 
 class Camera:
-    # зададим начальный сдвиг камеры
     def __init__(self):
         self.dx = 0
         self.dy = 0
 
-    # сдвинуть объект obj на смещение камеры
     def apply(self, obj):
         obj.rect.x += self.dx
         obj.rect.y += self.dy
 
-    # позиционировать камеру на объекте target
     def update(self, target):
         self.dx = -(target.rect.x + target.rect.w // 2 - width // 2)
         self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
@@ -151,11 +149,24 @@ class Frankenstein(Creatures):
         self.__damage__ = None
 
 
-class Chest:
-    def __init__(self, coords, loot_name, loot_num=1):
+class Chest(pygame.sprite.Sprite):
+    def __init__(self, coords, loot_name):
+        super().__init__(all_sprites)
+        self.image = load_image('close_chest.png')
         self.coords = coords
         self.loot_name = loot_name
-        self.loot_num = loot_num
+        self.rect = self.image.get_rect().move(tile_width * coords[0],
+                                               tile_height * coords[1])
+        if loot_name == 'key':
+            self.loot_num = 1
+            CHEST_LOOT.pop()
+        elif loot_name == 'potion':
+            self.loot_num = random.randint(1, 3)
+        elif loot_name == 'ammo':
+            self.loot_num = random.randint(15, 40)
+
+    def open_chest(self):
+        self.image = load_image('open_chest.png')
 
 
 player_image = load_image('Player_down.png')
@@ -175,6 +186,9 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_e and player.map[int(player.y)][int(player.x)] == '!':
+                chest = Chest((int(player.y), int(player.x)), random.choice(CHEST_LOOT))
+                chest.open_chest()
             if event.key == pygame.K_w:
                 direction = 'up'
                 move = True
@@ -207,16 +221,16 @@ while running:
             direction = None
             move = False
     time += clock.tick()
-    if move and time >= 50:
+    if move and time >= 150:
         player.update(direction)
         time = 0
+
     camera.update(player)
     for sprite in all_sprites:
         camera.apply(sprite)
 
     gamemap.render()
     all_sprites.draw(screen)
-
     pygame.display.flip()
 
 pygame.quit()
