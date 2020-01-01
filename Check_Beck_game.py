@@ -36,7 +36,7 @@ def generate_level(level):
                 Tile("chest", x, y)
             elif level[y][x] == '@':
                 Tile('empty', x, y)
-                new_player = Player(x, y)
+                new_player = Player(x, y, load_level('map.txt'))
     return new_player, x, y
 
 
@@ -74,23 +74,36 @@ class Creatures:
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos_x, pos_y):
+    def __init__(self, pos_x, pos_y, map):
         super().__init__(player_group, all_sprites)
         self.image = player_image
         self.inventory = dict()
         self.weapons = list()
+        self.x, self.y = pos_x, pos_y
         self.image = load_image('player.png')
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
+        self.map = map
+        self.map = [list(i) for i in self.map]
 
     def update(self, direction):
-        if direction == 'up':
+        x = int(self.x)
+        y = int(self.y)
+        if (direction == 'up' and self.map[y + (1 if self.y % 1 != 0 else 0) - 1][x] != '#' and
+                self.map[y + (1 if self.y % 1 != 0 else 0) - 1][x + (1 if self.x % 1 != 0 else 0)] != '#'):
             self.rect = self.rect.move(0, -25)
-        if direction == 'down':
+            self.y -= 0.5
+        if (direction == 'down' and self.map[y + 1][x] != "#" and
+                self.map[y + 1][x + (1 if self.x % 1 != 0 else 0)] != '#'):
             self.rect = self.rect.move(0, 25)
-        if direction == 'right':
+            self.y += 0.5
+        if (direction == 'right' and self.map[y][x + 1] != '#' and
+                self.map[y + (1 if self.y % 1 != 0 else 0)][x + 1] != '#'):
             self.rect = self.rect.move(25, 0)
-        if direction == 'left':
+            self.x += 0.5
+        if (direction == 'left' and self.map[y][x + (1 if self.x % 1 != 0 else 0) - 1] != '#' and
+                self.map[y + (1 if self.y % 1 != 0 else 0)][x + (1 if self.x % 1 != 0 else 0) - 1] != '#sssssss'):
             self.rect = self.rect.move(-25, 0)
+            self.x -= 0.5
 
 
 
@@ -147,7 +160,7 @@ class Chest:
 
 
 player_image = load_image('Player.png')
-GameMap = GameMap(5, 7)
+gamemap = GameMap(98, 98)
 player, level_x, level_y = generate_level(load_level('map.txt'))
 
 
@@ -201,7 +214,7 @@ while running:
         player.update(direction)
         time = 0
 
-    GameMap.render()
+    gamemap.render()
     all_sprites.draw(screen)
     player_group.draw(screen)
 
