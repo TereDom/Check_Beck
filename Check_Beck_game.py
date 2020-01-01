@@ -32,7 +32,7 @@ def generate_level(level):
             elif level[y][x] == '#':
                 Tile('wall', x, y)
             elif level[y][x] == '!':
-                Tile("empty", x, y)
+                Tile('empty', x, y)
                 Tile("chest", x, y)
             elif level[y][x] == '@':
                 Tile('empty', x, y)
@@ -106,6 +106,7 @@ class Player(pygame.sprite.Sprite):
             self.x -= 0.5
 
 
+
 class Camera:
     # зададим начальный сдвиг камеры
     def __init__(self):
@@ -121,6 +122,8 @@ class Camera:
     def update(self, target):
         self.dx = -(target.rect.x + target.rect.w // 2 - width // 2)
         self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
+
+
 
 
 class Bat(Creatures):
@@ -154,6 +157,8 @@ class Chest:
         self.loot_num = loot_num
 
 
+
+
 player_image = load_image('Player.png')
 gamemap = GameMap(98, 98)
 player, level_x, level_y = generate_level(load_level('map.txt'))
@@ -166,7 +171,7 @@ running = True
 move = False
 direction = None
 while running:
-    screen.fill(pygame.color.Color("black"))
+    screen.fill(pygame.color.Color('black'))
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
