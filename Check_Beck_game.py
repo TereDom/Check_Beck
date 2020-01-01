@@ -26,7 +26,7 @@ def load_level(filename):
 
 
 def generate_level(level):
-    new_player, x, y = None, None, None
+    new_player, x, y, chests = None, None, None, dict()
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == '.':
@@ -35,11 +35,11 @@ def generate_level(level):
                 Tile('wall', x, y)
             elif level[y][x] == '!':
                 Tile("empty", x, y)
-                Tile("close_chest", x, y)
+                chests[(y, x)] = Chest((x, y))
             elif level[y][x] == '@':
                 Tile('empty', x, y)
     new_player = Player(3, 3, load_level('map.txt'))
-    return new_player, x, y
+    return new_player, x, y, chests
 
 
 class Tile(pygame.sprite.Sprite):
@@ -150,19 +150,19 @@ class Frankenstein(Creatures):
 
 
 class Chest(pygame.sprite.Sprite):
-    def __init__(self, coords, loot_name):
+    def __init__(self, coords):
         super().__init__(all_sprites)
         self.image = load_image('close_chest.png')
         self.coords = coords
-        self.loot_name = loot_name
+        self.loot_name = random.choice(CHEST_LOOT)
         self.rect = self.image.get_rect().move(tile_width * coords[0],
                                                tile_height * coords[1])
-        if loot_name == 'key':
+        if self.loot_name == 'key':
             self.loot_num = 1
             CHEST_LOOT.pop()
-        elif loot_name == 'potion':
+        elif self.loot_name == 'potion':
             self.loot_num = random.randint(1, 3)
-        elif loot_name == 'ammo':
+        elif self.loot_name == 'ammo':
             self.loot_num = random.randint(15, 40)
 
     def open_chest(self):
@@ -171,7 +171,7 @@ class Chest(pygame.sprite.Sprite):
 
 player_image = load_image('Player_down.png')
 gamemap = GameMap(98, 98)
-player, level_x, level_y = generate_level(load_level('map.txt'))
+player, level_x, level_y, chests = generate_level(load_level('map.txt'))
 
 
 clock = pygame.time.Clock()
@@ -187,8 +187,10 @@ while running:
             running = False
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_e and player.map[int(player.y)][int(player.x)] == '!':
-                chest = Chest((int(player.y), int(player.x)), random.choice(CHEST_LOOT))
+                chest = chests[(int(player.y), int(player.x))]
                 chest.open_chest()
+                player.inventory[chest.loot_name] = chest.loot_num
+                del chest
             if event.key == pygame.K_w:
                 direction = 'up'
                 move = True
