@@ -4,7 +4,6 @@ import os
 
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
-player_group = pygame.sprite.Group()
 size = width, height = 500, 400
 screen = pygame.display.set_mode(size)
 tile_width = tile_height = 50
@@ -33,10 +32,11 @@ def generate_level(level):
             elif level[y][x] == '#':
                 Tile('wall', x, y)
             elif level[y][x] == '!':
+                Tile("empty", x, y)
                 Tile("chest", x, y)
             elif level[y][x] == '@':
                 Tile('empty', x, y)
-                new_player = Player(x, y, load_level('map.txt'))
+    new_player = Player(3, 3, load_level('map.txt'))
     return new_player, x, y
 
 
@@ -75,7 +75,7 @@ class Creatures:
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y, map):
-        super().__init__(player_group, all_sprites)
+        super().__init__(all_sprites)
         self.image = player_image
         self.inventory = dict()
         self.weapons = list()
@@ -106,7 +106,6 @@ class Player(pygame.sprite.Sprite):
             self.x -= 0.5
 
 
-
 class Camera:
     # зададим начальный сдвиг камеры
     def __init__(self):
@@ -122,8 +121,6 @@ class Camera:
     def update(self, target):
         self.dx = -(target.rect.x + target.rect.w // 2 - width // 2)
         self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
-
-
 
 
 class Bat(Creatures):
@@ -157,8 +154,6 @@ class Chest:
         self.loot_num = loot_num
 
 
-
-
 player_image = load_image('Player.png')
 gamemap = GameMap(98, 98)
 player, level_x, level_y = generate_level(load_level('map.txt'))
@@ -171,8 +166,7 @@ running = True
 move = False
 direction = None
 while running:
-
-
+    screen.fill(pygame.color.Color("black"))
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -212,15 +206,12 @@ while running:
     if move and time >= 100:
         player.update(direction)
         time = 0
+    camera.update(player)
     for sprite in all_sprites:
         camera.apply(sprite)
 
     gamemap.render()
-
     all_sprites.draw(screen)
-    player_group.draw(screen)
-
-
 
     pygame.display.flip()
 
