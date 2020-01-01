@@ -5,7 +5,7 @@ import os
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 player_group = pygame.sprite.Group()
-size = width, height = 500, 400
+size = width, height = 1300, 700
 screen = pygame.display.set_mode(size)
 tile_width = tile_height = 50
 
@@ -34,16 +34,29 @@ def generate_level(level):
                 Tile('wall', x, y)
             elif level[y][x] == '!':
                 Tile("chest", x, y)
+            elif level[y][x] == '/':
+                Tile('darckness', x, y)
             elif level[y][x] == '@':
                 Tile('empty', x, y)
                 new_player = Player(x, y)
     return new_player, x, y
 
 
+def find_derection(event):
+    if event == pygame.K_w:
+        return 'up'
+    elif event == pygame.K_s:
+        return 'down'
+    elif event == pygame.K_a:
+        return 'left'
+    elif event == pygame.K_d:
+        return 'right'
+
+
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
         tile_images = {'wall': load_image('wall.png'), 'empty': load_image('floor.png'),
-                       'chest': load_image('close_chest.png')}
+                       'chest': load_image('close_chest.png'), 'darckness': load_image('darckness.png')}
         super().__init__(tiles_group, all_sprites)
         self.image = tile_images[tile_type]
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
@@ -64,7 +77,8 @@ class GameMap:
         self.cell_size = cell_size
 
     def render(self):
-        pass
+        all_sprites.draw(screen)
+        player_group.draw(screen)
 
 
 class Creatures:
@@ -77,6 +91,7 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(player_group, all_sprites)
         self.image = player_image
+        self.mask = pygame.mask.from_surface(self.image)
         self.inventory = dict()
         self.weapons = list()
         self.image = load_image('player.png')
@@ -93,24 +108,18 @@ class Player(pygame.sprite.Sprite):
             self.rect = self.rect.move(-25, 0)
 
 
-
 class Camera:
-    # зададим начальный сдвиг камеры
     def __init__(self):
         self.dx = 0
         self.dy = 0
 
-    # сдвинуть объект obj на смещение камеры
     def apply(self, obj):
         obj.rect.x += self.dx
         obj.rect.y += self.dy
 
-    # позиционировать камеру на объекте target
     def update(self, target):
         self.dx = -(target.rect.x + target.rect.w // 2 - width // 2)
         self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
-
-
 
 
 class Bat(Creatures):
@@ -144,8 +153,6 @@ class Chest:
         self.loot_num = loot_num
 
 
-
-
 player_image = load_image('Player.png')
 GameMap = GameMap(5, 7)
 player, level_x, level_y = generate_level(load_level('map.txt'))
@@ -165,46 +172,20 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_w:
-                direction = 'up'
-                move = True
-            elif event.key == pygame.K_s:
-                direction = 'down'
-                move = True
-            elif event.key == pygame.K_a:
-                direction = 'left'
-                move = True
-            elif event.key == pygame.K_d:
-                direction = 'right'
-                move = True
+            direction = find_derection(event.key)
+            move = True
         if event.type == pygame.KEYUP:
             direction = None
     if direction is None:
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_w]:
-            direction = "up"
-            move = True
-        elif keys[pygame.K_s]:
-            direction = 'down'
-            move = True
-        elif keys[pygame.K_a]:
-            direction = 'left'
-            move = True
-        elif keys[pygame.K_d]:
-            direction = 'right'
-            move = True
-        else:
-            direction = None
-            move = False
+        direction = find_derection(keys)
+        move = True
     time += clock.tick()
     if move and time >= 100:
         player.update(direction)
         time = 0
 
     GameMap.render()
-    all_sprites.draw(screen)
-    player_group.draw(screen)
-
     pygame.display.flip()
 
 pygame.quit()
