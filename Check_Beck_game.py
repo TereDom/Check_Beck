@@ -239,8 +239,9 @@ player_image = load_image('Player_down.png')
 gamemap = GameMap(98, 98)
 player, level_x, level_y, chests, gun, knife = generate_level(load_level('map.txt'))
 
-stick = pygame.joystick.Joystick(0)
-stick.init()
+if pygame.joystick.get_count():
+    stick = pygame.joystick.Joystick(0)
+    stick.init()
 
 clock = pygame.time.Clock()
 time = 0
@@ -305,38 +306,39 @@ while running:
         else:
             direction = None
             move = False
+    if pygame.joystick.get_count():
 
-    axis0 = stick.get_axis(0)
-    axis1 = stick.get_axis(1)
-    axis0 = 0 if -0.1 <= axis0 <= 0.1 else axis0
-    axis1 = 0 if -0.1 <= axis1 <= 0.1 else axis1
+        axis0 = stick.get_axis(0)
+        axis1 = stick.get_axis(1)
+        axis0 = 0 if -0.1 <= axis0 <= 0.1 else axis0
+        axis1 = 0 if -0.1 <= axis1 <= 0.1 else axis1
 
-    if abs(axis0) > abs(axis1):
-        if axis0 >= 0.1:
-            direction = 'right'
-            move = True
-        elif axis0 <= -0.1:
-            direction = 'left'
-            move = True
-    elif abs(axis0) < abs(axis1):
-        if axis1 >= 0.1:
-            direction = 'down'
-            move = True
-        elif axis1 <= -0.1:
-            direction = 'up'
-            move = True
-    else:
-        direction = None
-        move = False
+        if abs(axis0) > abs(axis1):
+            if axis0 >= 0.1:
+                direction = 'right'
+                move = True
+            elif axis0 <= -0.1:
+                direction = 'left'
+                move = True
+        elif abs(axis0) < abs(axis1):
+            if axis1 >= 0.1:
+                direction = 'down'
+                move = True
+            elif axis1 <= -0.1:
+                direction = 'up'
+                move = True
+        else:
+            direction = None
+            move = False
 
-    time += clock.tick()
-    if move and time >= 150:
-        player.update(direction)
-        time = 0
+        time += clock.tick()
+        if move and time >= 150:
+            player.update(direction)
+            time = 0
 
-    camera.update(player)
-    for sprite in all_sprites:
-        camera.apply(sprite)
+        camera.update(player)
+        for sprite in all_sprites:
+            camera.apply(sprite)
 
     gamemap.render()
     all_sprites.draw(screen)
