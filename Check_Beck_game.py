@@ -26,7 +26,7 @@ def load_level(filename):
 
 
 def generate_level(level):
-    new_player, x, y = None, None, None
+    new_player, x, y, chests = None, None, None, dict()
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == '.':
@@ -35,11 +35,13 @@ def generate_level(level):
                 Tile('wall', x, y)
             elif level[y][x] == '!':
                 Tile("empty", x, y)
-                Tile("chest", x, y)
+                chests[(y, x)] = Chest((x, y))
             elif level[y][x] == '@':
                 Tile('empty', x, y)
+    gun = FirstWeapon()
+    knife = SecondWeapon()
     new_player = Player(3, 3, load_level('map.txt'))
-    return new_player, x, y
+    return new_player, x, y, chests, gun, knife
 
 
 class Tile(pygame.sprite.Sprite):
@@ -125,7 +127,7 @@ class Camera:
 
     # позиционировать камеру на объекте target
     def update(self, target):
-        self.dx = -(target.rect.x + target.rect.w // 2 - width // 2)
+        self.dx = -(target.rect.x + target.rect.w // 2 - width // 2 + 100)
         self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
 
 
@@ -176,15 +178,15 @@ class Chest(pygame.sprite.Sprite):
 class FirstWeapon(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(inventory_sprites)
-        self.image = load_image('')
-        self.rect = (x, y)
+        self.image = load_image('gun.png')
+        self.rect = (650, 0)
 
 
 class SecondWeapon(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(inventory_sprites)
-        self.image = load_image('')
-        self.rect = (x, y)
+        self.image = load_image('knife.png')
+        self.rect = (755, 0)
 
 
 class Potion(pygame.sprite.Sprite):
@@ -209,7 +211,7 @@ class Key(pygame.sprite.Sprite):
 
 player_image = load_image('Player_down.png')
 gamemap = GameMap(98, 98)
-player, level_x, level_y, chests = generate_level(load_level('map.txt'))
+player, level_x, level_y, chests, gun, knife = generate_level(load_level('map.txt'))
 
 
 clock = pygame.time.Clock()
@@ -271,6 +273,8 @@ while running:
 
     gamemap.render()
     all_sprites.draw(screen)
+    screen.fill(pygame.Color('black'), pygame.Rect(650, 0, 850, 500))
+    inventory_sprites.draw(screen)
     pygame.display.flip()
 
 pygame.quit()
