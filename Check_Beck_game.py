@@ -9,7 +9,8 @@ tiles_group = pygame.sprite.Group()
 size = width, height = 850, 500
 screen = pygame.display.set_mode(size)
 tile_width = tile_height = 50
-CHEST_LOOT = ['potion', 'ammo']
+CHEST_LOOT = ['potion', 'ammo', 'key']
+LOOTS_WEIGHTS = [30, 30, 10]
 HP = 50
 HEALTH_BAR_SIZE = 178
 chests_found = 0
@@ -178,26 +179,24 @@ class Chest(pygame.sprite.Sprite):
         super().__init__(all_sprites)
         self.image = load_image('close_chest.png')
         self.coords = coords
-        self.loot_name = random.choice(CHEST_LOOT)
+        self.loot_name = random.choices(CHEST_LOOT, weights=LOOTS_WEIGHTS)[0]
         self.rect = self.image.get_rect().move(tile_width * coords[0],
                                                tile_height * coords[1])
-        global chests_found
-        if chests_found == 5:
-            CHEST_LOOT.append('key')
         if self.loot_name == 'key':
             self.loot_num = 1
             CHEST_LOOT.pop()
+            LOOTS_WEIGHTS.pop()
         elif self.loot_name == 'potion':
             self.loot_num = random.randint(1, 3)
         elif self.loot_name == 'ammo':
-            self.loot_num = random.randint(15, 40)
+            self.loot_num = random.randint(5, 20)
 
     def open_chest(self):
+        global chests_found
         pygame.mixer.music.load("data/ammo_picked.mp3") if self.loot_name == 'ammo' \
             else pygame.mixer.music.load("data/potion_picked.mp3")
         self.image = load_image('open_chest.png')
         pygame.mixer.music.play(1)
-        global chests_found
         chests_found += 1
 
 
@@ -273,7 +272,6 @@ while running:
                 else:
                     player.inventory[chest.loot_name] = chest.loot_num
                 player.map[int(player.y)][int(player.x)] = '?'
-                print(player.inventory, CHEST_LOOT)
                 del chest
             if event.key == pygame.K_w:
                 direction = 'up'
