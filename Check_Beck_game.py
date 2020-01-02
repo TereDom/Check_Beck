@@ -3,6 +3,7 @@ import os
 import random
 
 
+pygame.init()
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 size = width, height = 500, 400
@@ -174,23 +175,37 @@ gamemap = GameMap(98, 98)
 player, level_x, level_y, chests = generate_level(load_level('map.txt'))
 
 
+stick = pygame.joystick.Joystick(0)
+stick.init()
+
 clock = pygame.time.Clock()
 time = 0
 camera = Camera()
 running = True
 move = False
 direction = None
+
 while running:
     screen.fill(pygame.color.Color("black"))
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        if event.type == pygame.JOYBUTTONDOWN:
+            if event.button == 7:
+                running = False
+            if event.button == 0 and player.map[int(player.y)][int(player.x)] == '!':
+                chest = chests[(int(player.y), int(player.x))]
+                chest.open_chest()
+                player.inventory[chest.loot_name] = chest.loot_num
+                player.map[int(player.y)][int(player.x)] = '?'
+                del chests[(int(player.y), int(player.x))]
         if event.type == pygame.KEYDOWN:
             if event.key == pygame.K_e and player.map[int(player.y)][int(player.x)] == '!':
                 chest = chests[(int(player.y), int(player.x))]
                 chest.open_chest()
                 player.inventory[chest.loot_name] = chest.loot_num
-                del chest
+                player.map[int(player.y)][int(player.x)] = '?'
+                del chests[(int(player.y), int(player.x))]
             if event.key == pygame.K_w:
                 direction = 'up'
                 move = True
@@ -222,6 +237,30 @@ while running:
         else:
             direction = None
             move = False
+
+    axis0 = stick.get_axis(0)
+    axis1 = stick.get_axis(1)
+    axis0 = 0 if -0.1 <= axis0 <= 0.1 else axis0
+    axis1 = 0 if -0.1 <= axis1 <= 0.1 else axis1
+
+    if abs(axis0) > abs(axis1):
+        if axis0 >= 0.1:
+            direction = 'right'
+            move = True
+        elif axis0 <= -0.1:
+            direction = 'left'
+            move = True
+    elif abs(axis0) < abs(axis1):
+        if axis1 >= 0.1:
+            direction = 'down'
+            move = True
+        elif axis1 <= -0.1:
+            direction = 'up'
+            move = True
+    else:
+        direction = None
+        move = False
+
     time += clock.tick()
     if move and time >= 150:
         player.update(direction)
