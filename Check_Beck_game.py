@@ -148,11 +148,24 @@ class Frankenstein(Creatures):
         self.__damage__ = None
 
 
-class Chest:
-    def __init__(self, coords, loot_name, loot_num=1):
+class Chest(pygame.sprite.Sprite):
+    def __init__(self, coords):
+        super().__init__(all_sprites)
+        self.image = load_image('close_chest.png')
         self.coords = coords
-        self.loot_name = loot_name
-        self.loot_num = loot_num
+        self.loot_name = random.choice(CHEST_LOOT)
+        self.rect = self.image.get_rect().move(tile_width * coords[0],
+                                               tile_height * coords[1])
+        if self.loot_name == 'key':
+            self.loot_num = 1
+            CHEST_LOOT.pop()
+        elif self.loot_name == 'potion':
+            self.loot_num = random.randint(1, 3)
+        elif self.loot_name == 'ammo':
+            self.loot_num = random.randint(15, 40)
+
+    def open_chest(self):
+        self.image = load_image('open_chest.png')
 
 
 class FirstWeapon(pygame.sprite.Sprite):
