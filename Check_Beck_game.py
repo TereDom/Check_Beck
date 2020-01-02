@@ -1,13 +1,14 @@
 import pygame
 import os
-
+import random
 
 inventory_sprites = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
-size = width, height = 500, 400
+size = width, height = 850, 500
 screen = pygame.display.set_mode(size)
 tile_width = tile_height = 50
+CHEST_LOOT = ['potion', 'ammo', 'key']
 
 
 def load_image(name, colorkey=None):
@@ -81,7 +82,7 @@ class Player(pygame.sprite.Sprite):
         self.inventory = dict()
         self.weapons = list()
         self.x, self.y = pos_x, pos_y
-        self.image = load_image('player.png')
+        self.image = load_image('Player_down.png')
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
         self.map = map
         self.map = [list(i) for i in self.map]
@@ -93,18 +94,22 @@ class Player(pygame.sprite.Sprite):
                 self.map[y + (1 if self.y % 1 != 0 else 0) - 1][x + (1 if self.x % 1 != 0 else 0)] != '#'):
             self.rect = self.rect.move(0, -25)
             self.y -= 0.5
+            self.image = load_image('Player_Up.png')
         if (direction == 'down' and self.map[y + 1][x] != "#" and
                 self.map[y + 1][x + (1 if self.x % 1 != 0 else 0)] != '#'):
             self.rect = self.rect.move(0, 25)
             self.y += 0.5
+            self.image = load_image('Player_Down.png')
         if (direction == 'right' and self.map[y][x + 1] != '#' and
                 self.map[y + (1 if self.y % 1 != 0 else 0)][x + 1] != '#'):
             self.rect = self.rect.move(25, 0)
             self.x += 0.5
+            self.image = load_image('Player_right.png')
         if (direction == 'left' and self.map[y][x + (1 if self.x % 1 != 0 else 0) - 1] != '#' and
                 self.map[y + (1 if self.y % 1 != 0 else 0)][x + (1 if self.x % 1 != 0 else 0) - 1] != '#'):
             self.rect = self.rect.move(-25, 0)
             self.x -= 0.5
+            self.image = load_image('Player_left.png')
 
 
 class Camera:
@@ -148,11 +153,24 @@ class Frankenstein(Creatures):
         self.__damage__ = None
 
 
-class Chest:
-    def __init__(self, coords, loot_name, loot_num=1):
+class Chest(pygame.sprite.Sprite):
+    def __init__(self, coords):
+        super().__init__(all_sprites)
+        self.image = load_image('close_chest.png')
         self.coords = coords
-        self.loot_name = loot_name
-        self.loot_num = loot_num
+        self.loot_name = random.choice(CHEST_LOOT)
+        self.rect = self.image.get_rect().move(tile_width * coords[0],
+                                               tile_height * coords[1])
+        if self.loot_name == 'key':
+            self.loot_num = 1
+            CHEST_LOOT.pop()
+        elif self.loot_name == 'potion':
+            self.loot_num = random.randint(1, 3)
+        elif self.loot_name == 'ammo':
+            self.loot_num = random.randint(15, 40)
+
+    def open_chest(self):
+        self.image = load_image('open_chest.png')
 
 
 class FirstWeapon(pygame.sprite.Sprite):
@@ -189,15 +207,9 @@ class Key(pygame.sprite.Sprite):
         pass
 
 
-
-
-
-
-
-
-player_image = load_image('Player.png')
+player_image = load_image('Player_down.png')
 gamemap = GameMap(98, 98)
-player, level_x, level_y = generate_level(load_level('map.txt'))
+player, level_x, level_y, chests = generate_level(load_level('map.txt'))
 
 
 clock = pygame.time.Clock()
@@ -212,6 +224,11 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_e and player.map[int(player.y)][int(player.x)] == '!':
+                chest = chests[(int(player.y), int(player.x))]
+                chest.open_chest()
+                player.inventory[chest.loot_name] = chest.loot_num
+                del chest
             if event.key == pygame.K_w:
                 direction = 'up'
                 move = True
@@ -244,16 +261,16 @@ while running:
             direction = None
             move = False
     time += clock.tick()
-    if move and time >= 100:
+    if move and time >= 150:
         player.update(direction)
         time = 0
+
     camera.update(player)
     for sprite in all_sprites:
         camera.apply(sprite)
 
     gamemap.render()
     all_sprites.draw(screen)
-
     pygame.display.flip()
 
 pygame.quit()
