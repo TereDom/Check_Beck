@@ -2,6 +2,7 @@ import pygame
 import os
 
 
+inventory_sprites = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 size = width, height = 500, 400
@@ -152,6 +153,46 @@ class Chest:
         self.coords = coords
         self.loot_name = loot_name
         self.loot_num = loot_num
+
+
+class FirstWeapon(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(inventory_sprites)
+        self.image = load_image('')
+        self.rect = (x, y)
+
+
+class SecondWeapon(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(inventory_sprites)
+        self.image = load_image('')
+        self.rect = (x, y)
+
+
+class Potion(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(inventory_sprites)
+        self.image = load_image('')
+        self.rect = (x, y)
+
+    def update(self):
+        pass
+
+
+class Key(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(inventory_sprites)
+        self.image = load_image('')
+        self.rect = (x, y)
+
+    def update(self):
+        pass
+
+
+
+
+
+
 
 
 player_image = load_image('Player.png')
