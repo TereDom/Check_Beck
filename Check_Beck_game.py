@@ -224,6 +224,11 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_e and player.map[int(player.y)][int(player.x)] == '!':
+                chest = chests[(int(player.y), int(player.x))]
+                chest.open_chest()
+                player.inventory[chest.loot_name] = chest.loot_num
+                del chest
             if event.key == pygame.K_w:
                 direction = 'up'
                 move = True
@@ -256,17 +261,16 @@ while running:
             direction = None
             move = False
     time += clock.tick()
-    if move and time >= 100:
+    if move and time >= 150:
         player.update(direction)
         time = 0
+
     camera.update(player)
     for sprite in all_sprites:
         camera.apply(sprite)
 
     gamemap.render()
     all_sprites.draw(screen)
-    screen.fill(pygame.Color('black'), pygame.Rect(650, 0, 880, 550))
-
     pygame.display.flip()
 
 pygame.quit()
