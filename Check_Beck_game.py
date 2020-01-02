@@ -136,17 +136,14 @@ class Player(pygame.sprite.Sprite):
 
 
 class Camera:
-    # зададим начальный сдвиг камеры
     def __init__(self):
         self.dx = 0
         self.dy = 0
 
-    # сдвинуть объект obj на смещение камеры
     def apply(self, obj):
         obj.rect.x += self.dx
         obj.rect.y += self.dy
 
-    # позиционировать камеру на объекте target
     def update(self, target):
         self.dx = -(target.rect.x + target.rect.w // 2 - width // 2 + 100)
         self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
@@ -242,17 +239,30 @@ player_image = load_image('Player_down.png')
 gamemap = GameMap(98, 98)
 player, level_x, level_y, chests, gun, knife = generate_level(load_level('map.txt'))
 
+stick = pygame.joystick.Joystick(0)
+stick.init()
+
 clock = pygame.time.Clock()
 time = 0
 camera = Camera()
 running = True
 move = False
 direction = None
+
 while running:
     screen.fill(pygame.color.Color("black"))
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        if event.type == pygame.JOYBUTTONDOWN:
+            if event.button == 7:
+                running = False
+            if event.button == 0 and player.map[int(player.y)][int(player.x)] == '!':
+                chest = chests[(int(player.y), int(player.x))]
+                chest.open_chest()
+                player.inventory[chest.loot_name] = chest.loot_num
+                player.map[int(player.y)][int(player.x)] = '?'
+                del chests[(int(player.y), int(player.x))]
         if event.type == pygame.KEYDOWN:
             if player.map[int(player.y)][int(player.x)] == '!' and event.key == pygame.K_e:
                 chest = chests[(int(player.y), int(player.x))]
@@ -295,6 +305,30 @@ while running:
         else:
             direction = None
             move = False
+
+    axis0 = stick.get_axis(0)
+    axis1 = stick.get_axis(1)
+    axis0 = 0 if -0.1 <= axis0 <= 0.1 else axis0
+    axis1 = 0 if -0.1 <= axis1 <= 0.1 else axis1
+
+    if abs(axis0) > abs(axis1):
+        if axis0 >= 0.1:
+            direction = 'right'
+            move = True
+        elif axis0 <= -0.1:
+            direction = 'left'
+            move = True
+    elif abs(axis0) < abs(axis1):
+        if axis1 >= 0.1:
+            direction = 'down'
+            move = True
+        elif axis1 <= -0.1:
+            direction = 'up'
+            move = True
+    else:
+        direction = None
+        move = False
+
     time += clock.tick()
     if move and time >= 150:
         player.update(direction)
@@ -303,10 +337,12 @@ while running:
     camera.update(player)
     for sprite in all_sprites:
         camera.apply(sprite)
+
     gamemap.render()
     all_sprites.draw(screen)
     upgrade_inventory()
 #   inventory_sprites.draw(screen)
     pygame.display.flip()
 
+stick.quit()
 pygame.quit()
