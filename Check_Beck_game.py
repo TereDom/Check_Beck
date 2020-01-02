@@ -65,6 +65,87 @@ def upgrade_inventory():
     inventory_sprites.draw(screen)
 
 
+def set_direction_k(event, direction, move):
+    if event.key == pygame.K_W:
+        direction = 'up'
+        move = True
+    elif event.key == pygame.K_s:
+        direction = 'down'
+        move = True
+    elif event.key == pygame.K_a:
+        direction = 'left'
+        move = True
+    elif event.key == pygame.K_d:
+        direction = 'right'
+        move = True
+    else:
+        direction = None
+        move = False
+    if direction is None:
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_w]:
+            direction = "up"
+            move = True
+        elif keys[pygame.K_s]:
+            direction = 'down'
+            move = True
+        elif keys[pygame.K_a]:
+            direction = 'left'
+            move = True
+        elif keys[pygame.K_d]:
+            direction = 'right'
+            move = True
+        else:
+            direction = None
+            move = False
+    return direction, move
+
+
+def set_direction_j(joistick, direction, move):
+    axis0 = joistick.get_axis(0)
+    axis1 = joistick.get_axis(1)
+    axis0 = 0 if -0.1 <= axis0 <= 0.1 else axis0
+    axis1 = 0 if -0.1 <= axis1 <= 0.1 else axis1
+
+    if abs(axis0) > abs(axis1):
+        if axis0 >= 0.1:
+            direction = 'right'
+            move = True
+        elif axis0 <= -0.1:
+            direction = 'left'
+            move = True
+    elif abs(axis0) < abs(axis1):
+        if axis1 >= 0.1:
+            direction = 'down'
+            move = True
+        elif axis1 <= -0.1:
+            direction = 'up'
+            move = True
+    else:
+        direction = None
+        move = False
+    return direction, move
+
+
+def set_direction_j_hat(event, direction, move):
+    if event.value == (0, 1):
+        direction = 'up'
+        move = True
+    elif event.value == (0, -1):
+        direction = 'down'
+        move = True
+    elif event.value == (1, 0):
+        direction = 'right'
+        move = True
+    elif event.value == (-1, 0):
+        direction = 'left'
+        move = True
+    elif event.value == (0, 0):
+        direction = None
+        move = False
+    return direction, move
+
+
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
         tile_images = {'wall': load_image('wall.png'), 'empty': load_image('floor.png')}
@@ -241,6 +322,8 @@ player, level_x, level_y, chests, gun, knife = generate_level(load_level('map.tx
 if pygame.joystick.get_count():
     stick = pygame.joystick.Joystick(0)
     stick.init()
+else:
+    stick = None
 
 clock = pygame.time.Clock()
 time = 0
@@ -254,6 +337,9 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        if event.type == pygame.JOYHATMOTION:
+            print('ok')
+            direction, move = set_direction_j_hat(event, direction, move)
         if event.type == pygame.JOYBUTTONDOWN:
             if event.button == 7:
                 running = False
@@ -273,61 +359,13 @@ while running:
                     player.inventory[chest.loot_name] = chest.loot_num
                 player.map[int(player.y)][int(player.x)] = '?'
                 del chest
-            if event.key == pygame.K_w:
-                direction = 'up'
-                move = True
-            elif event.key == pygame.K_s:
-                direction = 'down'
-                move = True
-            elif event.key == pygame.K_a:
-                direction = 'left'
-                move = True
-            elif event.key == pygame.K_d:
-                direction = 'right'
-                move = True
+            direction, move = set_direction_k(event, direction, move)
         if event.type == pygame.KEYUP:
-            direction = None
-    if direction is None:
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_w]:
-            direction = "up"
-            move = True
-        elif keys[pygame.K_s]:
-            direction = 'down'
-            move = True
-        elif keys[pygame.K_a]:
-            direction = 'left'
-            move = True
-        elif keys[pygame.K_d]:
-            direction = 'right'
-            move = True
-        else:
-            direction = None
             move = False
-    if pygame.joystick.get_count():
-
-        axis0 = stick.get_axis(0)
-        axis1 = stick.get_axis(1)
-        axis0 = 0 if -0.1 <= axis0 <= 0.1 else axis0
-        axis1 = 0 if -0.1 <= axis1 <= 0.1 else axis1
-
-        if abs(axis0) > abs(axis1):
-            if axis0 >= 0.1:
-                direction = 'right'
-                move = True
-            elif axis0 <= -0.1:
-                direction = 'left'
-                move = True
-        elif abs(axis0) < abs(axis1):
-            if axis1 >= 0.1:
-                direction = 'down'
-                move = True
-            elif axis1 <= -0.1:
-                direction = 'up'
-                move = True
-        else:
             direction = None
-            move = False
+
+    if stick is not None and direction is None:
+        direction, move = set_direction_j(stick, direction, move)
 
     time += clock.tick()
     if move and time >= 150:
@@ -344,5 +382,6 @@ while running:
 #   inventory_sprites.draw(screen)
     pygame.display.flip()
 
-stick.quit()
+if stick is not None:
+    stick.quit()
 pygame.quit()
