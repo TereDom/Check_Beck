@@ -50,7 +50,7 @@ def generate_level(level):
 
 
 def upgrade_inventory():
-    screen.fill((0, 0, 0), pygame.Rect(650, 0, 850, 500))
+    screen.fill((51, 20, 20), pygame.Rect(650, 0, 850, 500))
     pygame.draw.rect(screen, (255, 255, 255), (660, 5, 180, 35), 1)
     pygame.draw.rect(screen, (255, 255, 255), (660, 65, 180, 65), 1)
 
@@ -66,7 +66,7 @@ def upgrade_inventory():
 
 
 def set_direction_k(event, direction, move):
-    if event.key == pygame.K_W:
+    if event.key == pygame.K_w:
         direction = 'up'
         move = True
     elif event.key == pygame.K_s:
@@ -128,22 +128,28 @@ def set_direction_j(joistick, direction, move):
 
 
 def set_direction_j_hat(event, direction, move):
+    flag = True
     if event.value == (0, 1):
         direction = 'up'
         move = True
+        flag = False
     elif event.value == (0, -1):
         direction = 'down'
         move = True
+        flag = False
     elif event.value == (1, 0):
         direction = 'right'
         move = True
+        flag = False
     elif event.value == (-1, 0):
         direction = 'left'
         move = True
+        flag = False
     elif event.value == (0, 0):
         direction = None
         move = False
-    return direction, move
+        flag = True
+    return direction, move, flag
 
 
 class Tile(pygame.sprite.Sprite):
@@ -189,6 +195,7 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
         self.map = map
         self.map = [list(i) for i in self.map]
+        self.hp = HP
 
     def update(self, direction):
         x = int(self.x)
@@ -295,13 +302,13 @@ class Chest(pygame.sprite.Sprite):
         self.loot_name = random.choices(CHEST_LOOT, weights=LOOTS_WEIGHTS)[0]
         self.rect = self.image.get_rect().move(tile_width * coords[0],
                                                tile_height * coords[1])
-        if self.loot_name == "<class '__main__.Key'>":
+        if str(self.loot_name.__class__) == "<class '__main__.Key'>":
             self.loot_num = 1
             CHEST_LOOT.pop()
             LOOTS_WEIGHTS.pop()
-        elif self.loot_name == "<class '__main__.Potion'>":
+        elif str(self.loot_name.__class__) == "<class '__main__.Potion'>":
             self.loot_num = random.randint(1, 3)
-        elif self.loot_name == "<class '__main__.Ammo'>":
+        elif str(self.loot_name.__class__) == "<class '__main__.Ammo'>":
             self.loot_num = random.randint(5, 20)
 
     def open_chest(self):
@@ -382,6 +389,7 @@ camera = Camera()
 running = True
 move = False
 direction = None
+flag = True
 
 while running:
     screen.fill(pygame.color.Color("black"))
@@ -389,14 +397,18 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.JOYHATMOTION:
-            direction, move = set_direction_j_hat(event, direction, move)
+            direction, move, flag = set_direction_j_hat(event, direction, move)
         if event.type == pygame.JOYBUTTONDOWN:
             if event.button == 7:
                 running = False
             if event.button == 0 and player.map[int(player.y)][int(player.x)] == '!':
                 chest = chests[(int(player.y), int(player.x))]
                 chest.open_chest()
-                player.inventory[chest.loot_name] = chest.loot_num
+                if chest.loot_name in player.inventory.keys():
+                    player.inventory[chest.loot_name] += chest.loot_num
+                else:
+                    player.inventory[chest.loot_name] = chest.loot_num
+                player.map[int(player.y)][int(player.x)] = '?'
                 player.map[int(player.y)][int(player.x)] = '?'
                 del chests[(int(player.y), int(player.x))]
         if event.type == pygame.JOYBUTTONDOWN:
@@ -405,7 +417,11 @@ while running:
             if event.button == 0 and player.map[int(player.y)][int(player.x)] == '!':
                 chest = chests[(int(player.y), int(player.x))]
                 chest.open_chest()
-                player.inventory[chest.loot_name] = chest.loot_num
+                if chest.loot_name in player.inventory.keys():
+                    player.inventory[chest.loot_name] += chest.loot_num
+                else:
+                    player.inventory[chest.loot_name] = chest.loot_num
+                player.map[int(player.y)][int(player.x)] = '?'
                 player.map[int(player.y)][int(player.x)] = '?'
                 del chests[(int(player.y), int(player.x))]
         if event.type == pygame.KEYDOWN:
@@ -423,7 +439,7 @@ while running:
             move = False
             direction = None
 
-    if stick is not None and direction is None:
+    if stick is not None and flag:
         direction, move = set_direction_j(stick, direction, move)
 
     time += clock.tick()
