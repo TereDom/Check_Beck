@@ -209,7 +209,7 @@ class Key(pygame.sprite.Sprite):
 
 player_image = load_image('Player_down.png')
 gamemap = GameMap(98, 98)
-player, level_x, level_y = generate_level(load_level('map.txt'))
+player, level_x, level_y, chests = generate_level(load_level('map.txt'))
 
 
 clock = pygame.time.Clock()
