@@ -331,14 +331,14 @@ while running:
             direction = None
             move = False
 
-        time += clock.tick()
-        if move and time >= 150:
-            player.update(direction)
-            time = 0
+    time += clock.tick()
+    if move and time >= 150:
+        player.update(direction)
+        time = 0
 
-        camera.update(player)
-        for sprite in all_sprites:
-            camera.apply(sprite)
+    camera.update(player)
+    for sprite in all_sprites:
+        camera.apply(sprite)
 
     gamemap.render()
     all_sprites.draw(screen)
