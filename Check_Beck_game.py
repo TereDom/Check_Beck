@@ -1,13 +1,14 @@
 import pygame
 import os
-
+import random
 
 inventory_sprites = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
-size = width, height = 500, 400
+size = width, height = 850, 500
 screen = pygame.display.set_mode(size)
 tile_width = tile_height = 50
+CHEST_LOOT = ['potion', 'ammo', 'key']
 
 
 def load_image(name, colorkey=None):
@@ -81,7 +82,7 @@ class Player(pygame.sprite.Sprite):
         self.inventory = dict()
         self.weapons = list()
         self.x, self.y = pos_x, pos_y
-        self.image = load_image('player.png')
+        self.image = load_image('Player_down.png')
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
         self.map = map
         self.map = [list(i) for i in self.map]
@@ -202,13 +203,7 @@ class Key(pygame.sprite.Sprite):
         pass
 
 
-
-
-
-
-
-
-player_image = load_image('Player.png')
+player_image = load_image('Player_down.png')
 gamemap = GameMap(98, 98)
 player, level_x, level_y = generate_level(load_level('map.txt'))
 
@@ -266,6 +261,7 @@ while running:
 
     gamemap.render()
     all_sprites.draw(screen)
+    screen.fill(pygame.Color('black'), pygame.Rect(650, 0, 880, 550))
 
     pygame.display.flip()
 
