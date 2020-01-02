@@ -338,7 +338,6 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.JOYHATMOTION:
-            print('ok')
             direction, move = set_direction_j_hat(event, direction, move)
         if event.type == pygame.JOYBUTTONDOWN:
             if event.button == 7:
