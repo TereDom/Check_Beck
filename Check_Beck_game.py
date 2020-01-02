@@ -2,13 +2,17 @@ import pygame
 import os
 import random
 
-
+pygame.init()
+inventory_sprites = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
-size = width, height = 500, 400
+size = width, height = 850, 500
 screen = pygame.display.set_mode(size)
 tile_width = tile_height = 50
-CHEST_LOOT = ['potion', 'ammo', 'key']
+CHEST_LOOT = ['potion', 'ammo']
+HP = 50
+HEALTH_BAR_SIZE = 178
+chests_found = 0
 
 
 def load_image(name, colorkey=None):
@@ -38,8 +42,26 @@ def generate_level(level):
                 chests[(y, x)] = Chest((x, y))
             elif level[y][x] == '@':
                 Tile('empty', x, y)
+    gun = FirstWeapon()
+    knife = SecondWeapon()
     new_player = Player(3, 3, load_level('map.txt'))
-    return new_player, x, y, chests
+    return new_player, x, y, chests, gun, knife
+
+
+def upgrade_inventory():
+    screen.fill((0, 0, 0), pygame.Rect(650, 0, 850, 500))
+    pygame.draw.rect(screen, (255, 255, 255), (660, 5, 180, 35), 1)
+    pygame.draw.rect(screen, (255, 255, 255), (660, 65, 180, 65), 1)
+
+    pygame.draw.rect(screen, (255, 255, 255), (680, 70, 55, 55), 1)
+    pygame.draw.rect(screen, (255, 255, 255), (765, 70, 55, 55), 1)
+    pygame.draw.rect(screen, (255, 255, 255), (660, 155, 55, 55), 1)
+    pygame.draw.rect(screen, (255, 255, 255), (785, 155, 55, 55), 1)
+    pygame.draw.rect(screen, (255, 255, 255), (660, 240, 55, 55), 1)
+    pygame.draw.rect(screen, (255, 255, 255), (785, 240, 55, 55), 1)
+    pygame.draw.rect(screen, (255, 255, 255), (660, 310, 180, 180), 1)
+    pygame.draw.rect(screen, pygame.color.Color('red'), (661, 6, HEALTH_BAR_SIZE / HP * player.hp, 33))
+    inventory_sprites.draw(screen)
 
 
 class Tile(pygame.sprite.Sprite):
@@ -85,6 +107,7 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
         self.map = map
         self.map = [list(i) for i in self.map]
+        self.hp = HP
 
     def update(self, direction):
         x = int(self.x)
@@ -93,12 +116,12 @@ class Player(pygame.sprite.Sprite):
                 self.map[y + (1 if self.y % 1 != 0 else 0) - 1][x + (1 if self.x % 1 != 0 else 0)] != '#'):
             self.rect = self.rect.move(0, -25)
             self.y -= 0.5
-            self.image = load_image('Player_up.png')
+            self.image = load_image('Player_Up.png')
         if (direction == 'down' and self.map[y + 1][x] != "#" and
                 self.map[y + 1][x + (1 if self.x % 1 != 0 else 0)] != '#'):
             self.rect = self.rect.move(0, 25)
             self.y += 0.5
-            self.image = load_image('Player_down.png')
+            self.image = load_image('Player_Down.png')
         if (direction == 'right' and self.map[y][x + 1] != '#' and
                 self.map[y + (1 if self.y % 1 != 0 else 0)][x + 1] != '#'):
             self.rect = self.rect.move(25, 0)
@@ -109,19 +132,23 @@ class Player(pygame.sprite.Sprite):
             self.rect = self.rect.move(-25, 0)
             self.x -= 0.5
             self.image = load_image('Player_left.png')
+        pygame.draw.rect(screen, pygame.color.Color('red'), (661, 6, self.hp - 2, 33))
 
 
 class Camera:
+    # зададим начальный сдвиг камеры
     def __init__(self):
         self.dx = 0
         self.dy = 0
 
+    # сдвинуть объект obj на смещение камеры
     def apply(self, obj):
         obj.rect.x += self.dx
         obj.rect.y += self.dy
 
+    # позиционировать камеру на объекте target
     def update(self, target):
-        self.dx = -(target.rect.x + target.rect.w // 2 - width // 2)
+        self.dx = -(target.rect.x + target.rect.w // 2 - width // 2 + 100)
         self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
 
 
@@ -157,6 +184,9 @@ class Chest(pygame.sprite.Sprite):
         self.loot_name = random.choice(CHEST_LOOT)
         self.rect = self.image.get_rect().move(tile_width * coords[0],
                                                tile_height * coords[1])
+        global chests_found
+        if chests_found == 5:
+            CHEST_LOOT.append('key')
         if self.loot_name == 'key':
             self.loot_num = 1
             CHEST_LOOT.pop()
@@ -166,13 +196,51 @@ class Chest(pygame.sprite.Sprite):
             self.loot_num = random.randint(15, 40)
 
     def open_chest(self):
+        pygame.mixer.music.load("data/ammo_picked.mp3") if self.loot_name == 'ammo' \
+            else pygame.mixer.music.load("data/potion_picked.mp3")
         self.image = load_image('open_chest.png')
+        pygame.mixer.music.play(1)
+        global chests_found
+        chests_found += 1
+
+
+class FirstWeapon(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(inventory_sprites)
+        self.image = load_image('gun.png')
+        self.rect = (680, 70)
+
+
+class SecondWeapon(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(inventory_sprites)
+        self.image = load_image('knife.png')
+        self.rect = (765, 70)
+
+
+class Potion(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(inventory_sprites)
+        self.image = load_image('')
+        self.rect = (x, y)
+
+    def update(self):
+        pass
+
+
+class Key(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(inventory_sprites)
+        self.image = load_image('')
+        self.rect = (x, y)
+
+    def update(self):
+        pass
 
 
 player_image = load_image('Player_down.png')
 gamemap = GameMap(98, 98)
-player, level_x, level_y, chests = generate_level(load_level('map.txt'))
-
+player, level_x, level_y, chests, gun, knife = generate_level(load_level('map.txt'))
 
 clock = pygame.time.Clock()
 time = 0
@@ -186,10 +254,15 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_e and player.map[int(player.y)][int(player.x)] == '!':
+            if player.map[int(player.y)][int(player.x)] == '!' and event.key == pygame.K_e:
                 chest = chests[(int(player.y), int(player.x))]
                 chest.open_chest()
-                player.inventory[chest.loot_name] = chest.loot_num
+                if chest.loot_name in player.inventory.keys():
+                    player.inventory[chest.loot_name] += chest.loot_num
+                else:
+                    player.inventory[chest.loot_name] = chest.loot_num
+                player.map[int(player.y)][int(player.x)] = '?'
+                print(player.inventory, CHEST_LOOT)
                 del chest
             if event.key == pygame.K_w:
                 direction = 'up'
@@ -230,9 +303,10 @@ while running:
     camera.update(player)
     for sprite in all_sprites:
         camera.apply(sprite)
-
     gamemap.render()
     all_sprites.draw(screen)
+    upgrade_inventory()
+#   inventory_sprites.draw(screen)
     pygame.display.flip()
 
 pygame.quit()
