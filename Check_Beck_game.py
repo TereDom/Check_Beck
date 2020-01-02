@@ -189,7 +189,6 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
         self.map = map
         self.map = [list(i) for i in self.map]
-        self.hp = HP
 
     def update(self, direction):
         x = int(self.x)
@@ -214,7 +213,6 @@ class Player(pygame.sprite.Sprite):
             self.rect = self.rect.move(-25, 0)
             self.x -= 0.5
             self.image = load_image('Player_left.png')
-        pygame.draw.rect(screen, pygame.color.Color('red'), (661, 6, self.hp - 2, 33))
 
 
 class Camera:
@@ -255,6 +253,40 @@ class Frankenstein(Creatures):
         self.__damage__ = None
 
 
+class Potion(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(inventory_sprites)
+        self.image = load_image('potion.png')
+        self.rect = (785, 150)
+
+    def update(self):
+        pass
+
+
+class Key(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(inventory_sprites)
+        self.image = load_image('key.png')
+        self.rect = (660, 240)
+
+    def update(self):
+        pass
+
+
+class Ammo(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(inventory_sprites)
+        self.image = load_image('ammo.png')
+        self.rect = (660, 150)
+
+    def update(self):
+        pass
+
+
+CHEST_LOOT = [Potion(), Ammo(), Key()]
+LOOTS_WEIGHTS = [30, 30, 10]
+
+
 class Chest(pygame.sprite.Sprite):
     def __init__(self, coords):
         super().__init__(all_sprites)
@@ -263,13 +295,13 @@ class Chest(pygame.sprite.Sprite):
         self.loot_name = random.choices(CHEST_LOOT, weights=LOOTS_WEIGHTS)[0]
         self.rect = self.image.get_rect().move(tile_width * coords[0],
                                                tile_height * coords[1])
-        if self.loot_name == 'key':
+        if self.loot_name == "<class '__main__.Key'>":
             self.loot_num = 1
             CHEST_LOOT.pop()
             LOOTS_WEIGHTS.pop()
-        elif self.loot_name == 'potion':
+        elif self.loot_name == "<class '__main__.Potion'>":
             self.loot_num = random.randint(1, 3)
-        elif self.loot_name == 'ammo':
+        elif self.loot_name == "<class '__main__.Ammo'>":
             self.loot_num = random.randint(5, 20)
 
     def open_chest(self):
@@ -313,12 +345,31 @@ class Key(pygame.sprite.Sprite):
 
     def update(self):
         pass
+        pygame.mixer.music.play(1)
+        chests_found += 1
+
+
+class FirstWeapon(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(inventory_sprites)
+        self.image = load_image('gun.png')
+        self.rect = (680, 70)
+
+
+class SecondWeapon(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(inventory_sprites)
+        self.image = load_image('knife.png')
+        self.rect = (765, 70)
 
 
 player_image = load_image('Player_down.png')
 gamemap = GameMap(98, 98)
 player, level_x, level_y, chests, gun, knife = generate_level(load_level('map.txt'))
 
+if pygame.joystick.get_count():
+    stick = pygame.joystick.Joystick(0)
+    stick.init()
 if pygame.joystick.get_count():
     stick = pygame.joystick.Joystick(0)
     stick.init()
@@ -339,6 +390,15 @@ while running:
             running = False
         if event.type == pygame.JOYHATMOTION:
             direction, move = set_direction_j_hat(event, direction, move)
+        if event.type == pygame.JOYBUTTONDOWN:
+            if event.button == 7:
+                running = False
+            if event.button == 0 and player.map[int(player.y)][int(player.x)] == '!':
+                chest = chests[(int(player.y), int(player.x))]
+                chest.open_chest()
+                player.inventory[chest.loot_name] = chest.loot_num
+                player.map[int(player.y)][int(player.x)] = '?'
+                del chests[(int(player.y), int(player.x))]
         if event.type == pygame.JOYBUTTONDOWN:
             if event.button == 7:
                 running = False
