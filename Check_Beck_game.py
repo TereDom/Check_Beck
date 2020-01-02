@@ -126,7 +126,7 @@ class Camera:
 
     # позиционировать камеру на объекте target
     def update(self, target):
-        self.dx = -(target.rect.x + target.rect.w // 2 - width // 2)
+        self.dx = -(target.rect.x + target.rect.w // 2 - width // 2 + 100)
         self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
 
 
@@ -178,14 +178,14 @@ class FirstWeapon(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(inventory_sprites)
         self.image = load_image('gun.png')
-        self.rect = (650, 0)
+        self.rect = (680, 0)
 
 
 class SecondWeapon(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(inventory_sprites)
         self.image = load_image('knife.png')
-        self.rect = (755, 0)
+        self.rect = (765, 0)
 
 
 class Potion(pygame.sprite.Sprite):
@@ -272,8 +272,19 @@ while running:
 
     gamemap.render()
     all_sprites.draw(screen)
-    screen.fill(pygame.Color('black'), pygame.Rect(650, 0, 850, 500))
-    inventory_sprites.draw(screen)
+    screen.fill((0, 0, 0), pygame.Rect(650, 0, 850, 500))
+    pygame.draw.rect(screen, (255, 255, 255), (660, 5, 180, 35), 1)
+    pygame.draw.rect(screen, (255, 255, 255), (660, 65, 180, 65), 1)
+    pygame.draw.rect(screen, (255, 255, 255), (680, 70, 55, 55), 1)
+    pygame.draw.rect(screen, (255, 255, 255), (765, 70, 55, 55), 1)
+    pygame.draw.rect(screen, (255, 255, 255), (660, 155, 55, 55), 1)
+    pygame.draw.rect(screen, (255, 255, 255), (785, 155, 55, 55), 1)
+    pygame.draw.rect(screen, (255, 255, 255), (660, 240, 55, 55), 1)
+    pygame.draw.rect(screen, (255, 255, 255), (785, 240, 55, 55), 1)
+
+
+
+ #   inventory_sprites.draw(screen)
     pygame.display.flip()
 
 pygame.quit()
