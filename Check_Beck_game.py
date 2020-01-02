@@ -94,18 +94,22 @@ class Player(pygame.sprite.Sprite):
                 self.map[y + (1 if self.y % 1 != 0 else 0) - 1][x + (1 if self.x % 1 != 0 else 0)] != '#'):
             self.rect = self.rect.move(0, -25)
             self.y -= 0.5
+            self.image = load_image('Player_Up.png')
         if (direction == 'down' and self.map[y + 1][x] != "#" and
                 self.map[y + 1][x + (1 if self.x % 1 != 0 else 0)] != '#'):
             self.rect = self.rect.move(0, 25)
             self.y += 0.5
+            self.image = load_image('Player_Down.png')
         if (direction == 'right' and self.map[y][x + 1] != '#' and
                 self.map[y + (1 if self.y % 1 != 0 else 0)][x + 1] != '#'):
             self.rect = self.rect.move(25, 0)
             self.x += 0.5
+            self.image = load_image('Player_right.png')
         if (direction == 'left' and self.map[y][x + (1 if self.x % 1 != 0 else 0) - 1] != '#' and
                 self.map[y + (1 if self.y % 1 != 0 else 0)][x + (1 if self.x % 1 != 0 else 0) - 1] != '#'):
             self.rect = self.rect.move(-25, 0)
             self.x -= 0.5
+            self.image = load_image('Player_left.png')
 
 
 class Camera:
