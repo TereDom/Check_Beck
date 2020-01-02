@@ -26,7 +26,7 @@ def load_level(filename):
 
 
 def generate_level(level):
-    new_player, x, y = None, None, None
+    new_player, x, y, chests = None, None, None, dict()
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == '.':
@@ -35,17 +35,16 @@ def generate_level(level):
                 Tile('wall', x, y)
             elif level[y][x] == '!':
                 Tile("empty", x, y)
-                Tile("chest", x, y)
+                chests[(y, x)] = Chest((x, y))
             elif level[y][x] == '@':
                 Tile('empty', x, y)
     new_player = Player(3, 3, load_level('map.txt'))
-    return new_player, x, y
+    return new_player, x, y, chests
 
 
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
-        tile_images = {'wall': load_image('wall.png'), 'empty': load_image('floor.png'),
-                       'chest': load_image('close_chest.png')}
+        tile_images = {'wall': load_image('wall.png'), 'empty': load_image('floor.png')}
         super().__init__(tiles_group, all_sprites)
         self.image = tile_images[tile_type]
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
