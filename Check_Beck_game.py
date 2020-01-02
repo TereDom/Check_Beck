@@ -46,8 +46,7 @@ def generate_level(level):
 
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
-        tile_images = {'wall': load_image('wall.png'), 'empty': load_image('floor.png'),
-                       'chest': load_image('close_chest.png')}
+        tile_images = {'wall': load_image('wall.png'), 'empty': load_image('floor.png')}
         super().__init__(tiles_group, all_sprites)
         self.image = tile_images[tile_type]
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
@@ -127,7 +126,7 @@ class Camera:
 
     # позиционировать камеру на объекте target
     def update(self, target):
-        self.dx = -(target.rect.x + target.rect.w // 2 - width // 2 + 100)
+        self.dx = -(target.rect.x + target.rect.w // 2 - width // 2)
         self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
 
 
