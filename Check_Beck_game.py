@@ -9,6 +9,9 @@ size = width, height = 850, 500
 screen = pygame.display.set_mode(size)
 tile_width = tile_height = 50
 CHEST_LOOT = ['potion', 'ammo', 'key']
+HP = 50
+
+HEALTH_BAR_SIZE = 178
 
 
 def load_image(name, colorkey=None):
@@ -42,6 +45,22 @@ def generate_level(level):
     knife = SecondWeapon()
     new_player = Player(3, 3, load_level('map.txt'))
     return new_player, x, y, chests, gun, knife
+
+
+def upgrade_inventory():
+    screen.fill((0, 0, 0), pygame.Rect(650, 0, 850, 500))
+    pygame.draw.rect(screen, (255, 255, 255), (660, 5, 180, 35), 1)
+    pygame.draw.rect(screen, (255, 255, 255), (660, 65, 180, 65), 1)
+
+    pygame.draw.rect(screen, (255, 255, 255), (680, 70, 55, 55), 1)
+    pygame.draw.rect(screen, (255, 255, 255), (765, 70, 55, 55), 1)
+    pygame.draw.rect(screen, (255, 255, 255), (660, 155, 55, 55), 1)
+    pygame.draw.rect(screen, (255, 255, 255), (785, 155, 55, 55), 1)
+    pygame.draw.rect(screen, (255, 255, 255), (660, 240, 55, 55), 1)
+    pygame.draw.rect(screen, (255, 255, 255), (785, 240, 55, 55), 1)
+    pygame.draw.rect(screen, (255, 255, 255), (660, 310, 180, 180), 1)
+    pygame.draw.rect(screen, pygame.color.Color('red'), (661, 6, HEALTH_BAR_SIZE / HP * player.hp, 33))
+    inventory_sprites.draw(screen)
 
 
 class Tile(pygame.sprite.Sprite):
@@ -87,6 +106,7 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
         self.map = map
         self.map = [list(i) for i in self.map]
+        self.hp = HP
 
     def update(self, direction):
         x = int(self.x)
@@ -111,6 +131,7 @@ class Player(pygame.sprite.Sprite):
             self.rect = self.rect.move(-25, 0)
             self.x -= 0.5
             self.image = load_image('Player_left.png')
+        pygame.draw.rect(screen, pygame.color.Color('red'), (661, 6, self.hp - 2, 33))
 
 
 class Camera:
@@ -178,14 +199,14 @@ class FirstWeapon(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(inventory_sprites)
         self.image = load_image('gun.png')
-        self.rect = (680, 0)
+        self.rect = (680, 70)
 
 
 class SecondWeapon(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(inventory_sprites)
         self.image = load_image('knife.png')
-        self.rect = (765, 0)
+        self.rect = (765, 70)
 
 
 class Potion(pygame.sprite.Sprite):
@@ -272,15 +293,7 @@ while running:
 
     gamemap.render()
     all_sprites.draw(screen)
-    screen.fill((0, 0, 0), pygame.Rect(650, 0, 850, 500))
-    pygame.draw.rect(screen, (255, 255, 255), (660, 5, 180, 35), 1)
-    pygame.draw.rect(screen, (255, 255, 255), (660, 65, 180, 65), 1)
-    pygame.draw.rect(screen, (255, 255, 255), (680, 70, 55, 55), 1)
-    pygame.draw.rect(screen, (255, 255, 255), (765, 70, 55, 55), 1)
-    pygame.draw.rect(screen, (255, 255, 255), (660, 155, 55, 55), 1)
-    pygame.draw.rect(screen, (255, 255, 255), (785, 155, 55, 55), 1)
-    pygame.draw.rect(screen, (255, 255, 255), (660, 240, 55, 55), 1)
-    pygame.draw.rect(screen, (255, 255, 255), (785, 240, 55, 55), 1)
+    upgrade_inventory()
 
 
 
