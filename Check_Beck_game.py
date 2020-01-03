@@ -9,8 +9,6 @@ tiles_group = pygame.sprite.Group()
 size = width, height = 850, 500
 screen = pygame.display.set_mode(size)
 tile_width = tile_height = 50
-CHEST_LOOT = ['potion', 'ammo', 'key']
-LOOTS_WEIGHTS = [30, 30, 10]
 HP = 50
 HEALTH_BAR_SIZE = 178
 chests_found = 0
@@ -78,7 +76,6 @@ def set_direction_wasd(event):
         direction = 'right'
     else:
         move = False
-
     if event.type == pygame.KEYUP and event.key in (pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d):
         keys = pygame.key.get_pressed()
         move = True
@@ -244,6 +241,36 @@ class Frankenstein(Creatures):
         self.__damage__ = None
 
 
+class Potion(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(inventory_sprites)
+        self.image = load_image('potion.png')
+        self.rect = (783, 150)
+
+    def update(self):
+        pass
+
+
+class Key(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(inventory_sprites)
+        self.image = load_image('key.png')
+        self.rect = (658, 240)
+
+    def update(self):
+        pass
+
+
+class Ammo(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(inventory_sprites)
+        self.image = load_image('ammo.png')
+        self.rect = (658, 150)
+
+    def update(self):
+        pass
+
+
 CHEST_LOOT = [Potion(), Ammo(), Key()]
 LOOTS_WEIGHTS = [30, 30, 10]
 
@@ -270,28 +297,6 @@ class Chest(pygame.sprite.Sprite):
         pygame.mixer.music.load("data/ammo_picked.mp3") if self.loot_name == 'ammo' \
             else pygame.mixer.music.load("data/potion_picked.mp3")
         self.image = load_image('open_chest.png')
-        pygame.mixer.music.play(1)
-        chests_found += 1
-
-
-class Potion(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__(inventory_sprites)
-        self.image = load_image('')
-        self.rect = (x, y)
-
-    def update(self):
-        pass
-
-
-class Key(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__(inventory_sprites)
-        self.image = load_image('')
-        self.rect = (x, y)
-
-    def update(self):
-        pass
         pygame.mixer.music.play(1)
         chests_found += 1
 
@@ -337,7 +342,7 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.JOYHATMOTION:
-            direction, move, flag = set_direction_j_hat(event, direction, move)
+            direction, move, flag = set_direction_j_hat(event)
         if event.type == pygame.JOYBUTTONDOWN:
             if event.button == 7:
                 running = False
@@ -363,7 +368,7 @@ while running:
         if event.type == pygame.KEYUP or event.type == pygame.KEYDOWN:
             direction, move = set_direction_wasd(event)
     if stick is not None and flag:
-        direction, move = set_direction_j_ls(stick, direction, move)
+        direction, move = set_direction_j_ls(stick)
 
     time += clock.tick()
     if move and time >= 150:
