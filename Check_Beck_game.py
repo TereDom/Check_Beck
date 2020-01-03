@@ -81,6 +81,9 @@ def set_direction_k(event, direction, move):
     else:
         direction = None
         move = False
+    if event.type == pygame.KEYUP:
+        direction = None
+        move = False
     if direction is None:
         keys = pygame.key.get_pressed()
         if keys[pygame.K_w]:
@@ -434,11 +437,8 @@ while running:
                     player.inventory[chest.loot_name] = chest.loot_num
                 player.map[int(player.y)][int(player.x)] = '?'
                 del chest
+        if event.type == pygame.KEYUP or event.type == pygame.KEYDOWN:
             direction, move = set_direction_k(event, direction, move)
-        if event.type == pygame.KEYUP:
-            move = False
-            direction = None
-
     if stick is not None and flag:
         direction, move = set_direction_j(stick, direction, move)
 
