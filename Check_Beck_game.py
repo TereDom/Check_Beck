@@ -65,91 +65,72 @@ def upgrade_inventory():
     inventory_sprites.draw(screen)
 
 
-def set_direction_k(event, direction, move):
+def set_direction_wasd(event):
+    direction = None
+    move = True
     if event.key == pygame.K_w:
         direction = 'up'
-        move = True
     elif event.key == pygame.K_s:
         direction = 'down'
-        move = True
     elif event.key == pygame.K_a:
         direction = 'left'
-        move = True
     elif event.key == pygame.K_d:
         direction = 'right'
-        move = True
     else:
-        direction = None
         move = False
-    if event.type == pygame.KEYUP:
-        direction = None
-        move = False
-    if direction is None:
+
+    if event.type == pygame.KEYUP and event.key in (pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d):
         keys = pygame.key.get_pressed()
+        move = True
         if keys[pygame.K_w]:
             direction = "up"
-            move = True
         elif keys[pygame.K_s]:
             direction = 'down'
-            move = True
         elif keys[pygame.K_a]:
             direction = 'left'
-            move = True
         elif keys[pygame.K_d]:
             direction = 'right'
-            move = True
         else:
-            direction = None
             move = False
     return direction, move
 
 
-def set_direction_j(joistick, direction, move):
+def set_direction_j_ls(joistick):
     axis0 = joistick.get_axis(0)
     axis1 = joistick.get_axis(1)
     axis0 = 0 if -0.1 <= axis0 <= 0.1 else axis0
     axis1 = 0 if -0.1 <= axis1 <= 0.1 else axis1
 
+    direction = None
+    move = True
     if abs(axis0) > abs(axis1):
         if axis0 >= 0.1:
             direction = 'right'
-            move = True
         elif axis0 <= -0.1:
             direction = 'left'
-            move = True
     elif abs(axis0) < abs(axis1):
         if axis1 >= 0.1:
             direction = 'down'
-            move = True
         elif axis1 <= -0.1:
             direction = 'up'
-            move = True
     else:
-        direction = None
         move = False
     return direction, move
 
 
-def set_direction_j_hat(event, direction, move):
-    flag = True
+def set_direction_j_hat(event):
+    direction = None
+    move = True
+    flag = False
     if event.value == (0, 1):
         direction = 'up'
-        move = True
-        flag = False
     elif event.value == (0, -1):
         direction = 'down'
-        move = True
-        flag = False
     elif event.value == (1, 0):
         direction = 'right'
-        move = True
-        flag = False
     elif event.value == (-1, 0):
         direction = 'left'
-        move = True
-        flag = False
     elif event.value == (0, 0):
-        direction = None
         move = False
         flag = True
     return direction, move, flag
@@ -263,36 +244,6 @@ class Frankenstein(Creatures):
         self.__damage__ = None
 
 
-class Potion(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__(inventory_sprites)
-        self.image = load_image('potion.png')
-        self.rect = (785, 150)
-
-    def update(self):
-        pass
-
-
-class Key(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__(inventory_sprites)
-        self.image = load_image('key.png')
-        self.rect = (660, 240)
-
-    def update(self):
-        pass
-
-
-class Ammo(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__(inventory_sprites)
-        self.image = load_image('ammo.png')
-        self.rect = (660, 150)
-
-    def update(self):
-        pass
-
-
 CHEST_LOOT = [Potion(), Ammo(), Key()]
 LOOTS_WEIGHTS = [30, 30, 10]
 
@@ -321,20 +272,6 @@ class Chest(pygame.sprite.Sprite):
         self.image = load_image('open_chest.png')
         pygame.mixer.music.play(1)
         chests_found += 1
-
-
-class FirstWeapon(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__(inventory_sprites)
-        self.image = load_image('gun.png')
-        self.rect = (680, 70)
-
-
-class SecondWeapon(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__(inventory_sprites)
-        self.image = load_image('knife.png')
-        self.rect = (765, 70)
 
 
 class Potion(pygame.sprite.Sprite):
@@ -412,20 +349,6 @@ while running:
                 else:
                     player.inventory[chest.loot_name] = chest.loot_num
                 player.map[int(player.y)][int(player.x)] = '?'
-                player.map[int(player.y)][int(player.x)] = '?'
-                del chests[(int(player.y), int(player.x))]
-        if event.type == pygame.JOYBUTTONDOWN:
-            if event.button == 7:
-                running = False
-            if event.button == 0 and player.map[int(player.y)][int(player.x)] == '!':
-                chest = chests[(int(player.y), int(player.x))]
-                chest.open_chest()
-                if chest.loot_name in player.inventory.keys():
-                    player.inventory[chest.loot_name] += chest.loot_num
-                else:
-                    player.inventory[chest.loot_name] = chest.loot_num
-                player.map[int(player.y)][int(player.x)] = '?'
-                player.map[int(player.y)][int(player.x)] = '?'
                 del chests[(int(player.y), int(player.x))]
         if event.type == pygame.KEYDOWN:
             if player.map[int(player.y)][int(player.x)] == '!' and event.key == pygame.K_e:
@@ -438,9 +361,9 @@ while running:
                 player.map[int(player.y)][int(player.x)] = '?'
                 del chest
         if event.type == pygame.KEYUP or event.type == pygame.KEYDOWN:
-            direction, move = set_direction_k(event, direction, move)
+            direction, move = set_direction_wasd(event)
     if stick is not None and flag:
-        direction, move = set_direction_j(stick, direction, move)
+        direction, move = set_direction_j_ls(stick, direction, move)
 
     time += clock.tick()
     if move and time >= 150:
