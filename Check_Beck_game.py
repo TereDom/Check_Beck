@@ -45,24 +45,45 @@ def generate_level(level):
                 Tile('empty', x, y)
     gun = FirstWeapon()
     knife = SecondWeapon()
+    inventory = Inventory(width, height)
     new_player = Player(3, 3, load_level('map.txt'))
-    return new_player, x, y, chests, gun, knife
+    return new_player, x, y, chests, gun, knife, inventory
 
 
-def upgrade_inventory():
-    screen.fill((51, 20, 20), pygame.Rect(650, 0, 850, 500))
-    pygame.draw.rect(screen, (255, 255, 255), (660, 5, 180, 35), 1)
-    pygame.draw.rect(screen, (255, 255, 255), (660, 65, 180, 65), 1)
+class Inventory:
+    def __init__(self, width, height):
+        self.x = width * 0.76
+        self.width = width - self.x
 
-    pygame.draw.rect(screen, (255, 255, 255), (680, 70, 55, 55), 1)
-    pygame.draw.rect(screen, (255, 255, 255), (765, 70, 55, 55), 1)
-    pygame.draw.rect(screen, (255, 255, 255), (660, 155, 55, 55), 1)
-    pygame.draw.rect(screen, (255, 255, 255), (785, 155, 55, 55), 1)
-    pygame.draw.rect(screen, (255, 255, 255), (660, 240, 55, 55), 1)
-    pygame.draw.rect(screen, (255, 255, 255), (785, 240, 55, 55), 1)
-    pygame.draw.rect(screen, (255, 255, 255), (660, 310, 180, 180), 1)
-    pygame.draw.rect(screen, pygame.color.Color('red'), (661, 6, HEALTH_BAR_SIZE / HP * player.hp, 33))
-    inventory_sprites.draw(screen)
+    def draw_health_bar(self):
+        pygame.draw.rect(screen, (255, 255, 255), (int(self.x + self.width * 0.059), height // 100,
+                                                   int(self.width - self.width * 0.059 * 2 + 1), height * 0.07), 1)
+        pygame.draw.rect(screen, pygame.color.Color('red'), (int(self.x + self.width * 0.059) + 1,
+                                                             height * 0.012, HEALTH_BAR_SIZE / HP * player.hp,
+                                                             height * 0.066))
+
+    def draw_slots(self):
+        width_of_slots = 55
+        pygame.draw.rect(screen, (255, 255, 255), (658, 65, 180, 65), 1)
+        '''(int(self.x + self.width * 0.157), height * 0.13, self.width * 0.882,
+         height * 13), 1)'''
+
+        pygame.draw.rect(screen, (255, 255, 255), (int(self.x + self.width * 0.157), 70, 55, 55), 1)
+        pygame.draw.rect(screen, (255, 255, 255), (763, 70, 55, 55), 1)
+
+        pygame.draw.rect(screen, (255, 255, 255), (658, 155, 55, 55), 1)
+        pygame.draw.rect(screen, (255, 255, 255), (783, 155, 55, 55), 1)
+        pygame.draw.rect(screen, (255, 255, 255), (658, 240, 55, 55), 1)
+        pygame.draw.rect(screen, (255, 255, 255), (783, 240, 55, 55), 1)
+        pygame.draw.rect(screen, (255, 255, 255), (658, 310, 180, 180), 1)
+
+    def upgrade(self):
+        screen.fill((51, 20, 20), pygame.Rect(646, 0, 850, 500))
+        self.draw_health_bar()
+        self.draw_slots()
+        inventory_sprites.draw(screen)
+
+
 
 
 def set_direction_k(event, direction, move):
@@ -264,7 +285,7 @@ class Potion(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(inventory_sprites)
         self.image = load_image('potion.png')
-        self.rect = (785, 150)
+        self.rect = (783, 150)
 
     def update(self):
         pass
@@ -274,7 +295,7 @@ class Key(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(inventory_sprites)
         self.image = load_image('key.png')
-        self.rect = (660, 240)
+        self.rect = (658, 240)
 
     def update(self):
         pass
@@ -284,7 +305,7 @@ class Ammo(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(inventory_sprites)
         self.image = load_image('ammo.png')
-        self.rect = (660, 150)
+        self.rect = (658, 150)
 
     def update(self):
         pass
@@ -324,14 +345,14 @@ class FirstWeapon(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(inventory_sprites)
         self.image = load_image('gun.png')
-        self.rect = (680, 70)
+        self.rect = (678, 70)
 
 
 class SecondWeapon(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(inventory_sprites)
         self.image = load_image('knife.png')
-        self.rect = (765, 70)
+        self.rect = (763, 70)
 
 
 class Potion(pygame.sprite.Sprite):
@@ -372,7 +393,7 @@ class SecondWeapon(pygame.sprite.Sprite):
 
 player_image = load_image('Player_down.png')
 gamemap = GameMap(98, 98)
-player, level_x, level_y, chests, gun, knife = generate_level(load_level('map.txt'))
+player, level_x, level_y, chests, gun, knife, inventory = generate_level(load_level('map.txt'))
 
 if pygame.joystick.get_count():
     stick = pygame.joystick.Joystick(0)
@@ -453,8 +474,7 @@ while running:
 
     gamemap.render()
     all_sprites.draw(screen)
-    upgrade_inventory()
-#   inventory_sprites.draw(screen)
+    inventory.upgrade()
     pygame.display.flip()
 
 if stick is not None:
