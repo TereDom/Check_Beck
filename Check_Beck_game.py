@@ -9,8 +9,6 @@ tiles_group = pygame.sprite.Group()
 size = width, height = 850, 500
 screen = pygame.display.set_mode(size)
 tile_width = tile_height = 50
-CHEST_LOOT = ['potion', 'ammo', 'key']
-LOOTS_WEIGHTS = [30, 30, 10]
 HP = 50
 HEALTH_BAR_SIZE = 178
 chests_found = 0
@@ -108,6 +106,7 @@ def set_direction_uldr(player, event):
         direction = 'right'
     player.update_direction(direction)
 
+
 def set_direction_ls(joistick):
     axis0 = joistick.get_axis(0)
     axis1 = joistick.get_axis(1)
@@ -173,7 +172,8 @@ def set_direction_hat(event):
 
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
-        tile_images = {'wall': load_image('wall.png'), 'empty': load_image('floor.png'), 'door': load_image('door.png')}
+        tile_images = {'wall': load_image('wall.png'),
+                       'empty': load_image('floor.png'), 'door': load_image('door.png')}
         super().__init__(tiles_group, all_sprites)
         self.image = tile_images[tile_type]
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
@@ -351,42 +351,6 @@ class Chest(pygame.sprite.Sprite):
         pygame.mixer.music.load("data/ammo_picked.mp3") if self.loot_name == 'ammo' \
             else pygame.mixer.music.load("data/potion_picked.mp3")
         self.image = load_image('open_chest.png')
-        pygame.mixer.music.play(1)
-        chests_found += 1
-
-
-class FirstWeapon(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__(inventory_sprites)
-        self.image = load_image('gun.png')
-        self.rect = (680, 70)
-
-
-class SecondWeapon(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__(inventory_sprites)
-        self.image = load_image('knife.png')
-        self.rect = (765, 70)
-
-
-class Potion(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__(inventory_sprites)
-        self.image = load_image('')
-        self.rect = (x, y)
-
-    def update(self):
-        pass
-
-
-class Key(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__(inventory_sprites)
-        self.image = load_image('')
-        self.rect = (x, y)
-
-    def update(self):
-        pass
         pygame.mixer.music.play(1)
         chests_found += 1
 
