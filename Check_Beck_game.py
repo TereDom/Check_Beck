@@ -43,6 +43,8 @@ def generate_level(level):
                 chests[(y, x)] = Chest((x, y))
             elif level[y][x] == '@':
                 Tile('empty', x, y)
+            elif level[y][x] == '*':
+                Tile('door', x, y)
     gun = FirstWeapon()
     knife = SecondWeapon()
     new_player = Player(3, 3, load_level('map.txt'))
@@ -65,88 +67,105 @@ def upgrade_inventory():
     inventory_sprites.draw(screen)
 
 
-def set_direction_k(event, direction, move):
+def set_direction_wasd(event):
+    move = True
+    direction = None
     if event.key == pygame.K_w:
         direction = 'up'
-        move = True
     elif event.key == pygame.K_s:
         direction = 'down'
-        move = True
     elif event.key == pygame.K_a:
         direction = 'left'
-        move = True
     elif event.key == pygame.K_d:
         direction = 'right'
-        move = True
     else:
-        direction = None
         move = False
-    if direction is None:
+    if event.type == pygame.KEYUP and event.key in (pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d):
         keys = pygame.key.get_pressed()
+        move = True
         if keys[pygame.K_w]:
             direction = "up"
-            move = True
         elif keys[pygame.K_s]:
             direction = 'down'
-            move = True
         elif keys[pygame.K_a]:
             direction = 'left'
-            move = True
         elif keys[pygame.K_d]:
             direction = 'right'
-            move = True
         else:
-            direction = None
             move = False
     return direction, move
 
 
-def set_direction_j(joistick, direction, move):
+def set_direction_uldr(player, event):
+    direction = player.direction
+    if event.key == pygame.K_UP:
+        direction = 'up'
+    if event.key == pygame.K_DOWN:
+        direction = 'down'
+    if event.key == pygame.K_LEFT:
+        direction = 'left'
+    if event.key == pygame.K_RIGHT:
+        direction = 'right'
+    player.update_direction(direction)
+
+def set_direction_ls(joistick):
     axis0 = joistick.get_axis(0)
     axis1 = joistick.get_axis(1)
     axis0 = 0 if -0.1 <= axis0 <= 0.1 else axis0
     axis1 = 0 if -0.1 <= axis1 <= 0.1 else axis1
 
+    move = True
+    direction = None
     if abs(axis0) > abs(axis1):
         if axis0 >= 0.1:
             direction = 'right'
-            move = True
         elif axis0 <= -0.1:
             direction = 'left'
-            move = True
     elif abs(axis0) < abs(axis1):
         if axis1 >= 0.1:
             direction = 'down'
-            move = True
         elif axis1 <= -0.1:
             direction = 'up'
-            move = True
     else:
-        direction = None
         move = False
     return direction, move
 
 
-def set_direction_j_hat(event, direction, move):
-    flag = True
+def set_direction_rs(player, joistick):
+    axis4 = joistick.get_axis(4)
+    axis3 = joistick.get_axis(3)
+    axis4 = 0 if -0.1 <= axis4 <= 0.1 else axis4
+    axis3 = 0 if -0.1 <= axis3 <= 0.1 else axis3
+
+    direction = player.direction
+    if abs(axis4) > abs(axis3):
+        if axis4 >= 0.1:
+            direction = 'right'
+        elif axis4 <= -0.1:
+            direction = 'left'
+    elif abs(axis4) < abs(axis3):
+        if axis3 >= 0.1:
+            direction = 'down'
+        elif axis3 <= -0.1:
+            direction = 'up'
+    print(direction)
+
+    player.update_direction(direction)
+
+
+def set_direction_hat(event):
+    flag = False
+    move = True
+    direction = None
     if event.value == (0, 1):
         direction = 'up'
-        move = True
-        flag = False
     elif event.value == (0, -1):
         direction = 'down'
-        move = True
-        flag = False
     elif event.value == (1, 0):
         direction = 'right'
-        move = True
-        flag = False
     elif event.value == (-1, 0):
         direction = 'left'
-        move = True
-        flag = False
     elif event.value == (0, 0):
-        direction = None
         move = False
         flag = True
     return direction, move, flag
@@ -154,7 +173,7 @@ def set_direction_j_hat(event, direction, move):
 
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
-        tile_images = {'wall': load_image('wall.png'), 'empty': load_image('floor.png')}
+        tile_images = {'wall': load_image('wall.png'), 'empty': load_image('floor.png'), 'door': load_image('door.png')}
         super().__init__(tiles_group, all_sprites)
         self.image = tile_images[tile_type]
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
@@ -196,6 +215,7 @@ class Player(pygame.sprite.Sprite):
         self.map = map
         self.map = [list(i) for i in self.map]
         self.hp = HP
+        self.direction = 'down'
 
     def update(self, direction):
         x = int(self.x)
@@ -204,22 +224,37 @@ class Player(pygame.sprite.Sprite):
                 self.map[y + (1 if self.y % 1 != 0 else 0) - 1][x + (1 if self.x % 1 != 0 else 0)] != '#'):
             self.rect = self.rect.move(0, -25)
             self.y -= 0.5
-            self.image = load_image('Player_Up.png')
+            self.image = load_image('Player_up.png')
+            self.direction = 'up'
         if (direction == 'down' and self.map[y + 1][x] != "#" and
                 self.map[y + 1][x + (1 if self.x % 1 != 0 else 0)] != '#'):
             self.rect = self.rect.move(0, 25)
             self.y += 0.5
-            self.image = load_image('Player_Down.png')
+            self.image = load_image('Player_down.png')
+            self.direction = 'down'
         if (direction == 'right' and self.map[y][x + 1] != '#' and
                 self.map[y + (1 if self.y % 1 != 0 else 0)][x + 1] != '#'):
             self.rect = self.rect.move(25, 0)
             self.x += 0.5
             self.image = load_image('Player_right.png')
+            self.direction = 'right'
         if (direction == 'left' and self.map[y][x + (1 if self.x % 1 != 0 else 0) - 1] != '#' and
                 self.map[y + (1 if self.y % 1 != 0 else 0)][x + (1 if self.x % 1 != 0 else 0) - 1] != '#'):
             self.rect = self.rect.move(-25, 0)
             self.x -= 0.5
             self.image = load_image('Player_left.png')
+            self.direction = 'left'
+
+    def update_direction(self, direction):
+        self.direction = direction
+        if direction == 'up':
+            self.image = load_image("Player_up.png")
+        elif direction == 'down':
+            self.image = load_image("Player_down.png")
+        elif direction == 'left':
+            self.image = load_image('Player_left.png')
+        elif direction == 'right':
+            self.image = load_image('Player_right.png')
 
 
 class Camera:
@@ -397,9 +432,9 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.JOYHATMOTION:
-            direction, move, flag = set_direction_j_hat(event, direction, move)
+            direction, move, flag = set_direction_hat(event)
         if event.type == pygame.JOYBUTTONDOWN:
-            if event.button == 7:
+            if event.button == 7 or event.button == 6:
                 running = False
             if event.button == 0 and player.map[int(player.y)][int(player.x)] == '!':
                 chest = chests[(int(player.y), int(player.x))]
@@ -408,20 +443,6 @@ while running:
                     player.inventory[chest.loot_name] += chest.loot_num
                 else:
                     player.inventory[chest.loot_name] = chest.loot_num
-                player.map[int(player.y)][int(player.x)] = '?'
-                player.map[int(player.y)][int(player.x)] = '?'
-                del chests[(int(player.y), int(player.x))]
-        if event.type == pygame.JOYBUTTONDOWN:
-            if event.button == 7:
-                running = False
-            if event.button == 0 and player.map[int(player.y)][int(player.x)] == '!':
-                chest = chests[(int(player.y), int(player.x))]
-                chest.open_chest()
-                if chest.loot_name in player.inventory.keys():
-                    player.inventory[chest.loot_name] += chest.loot_num
-                else:
-                    player.inventory[chest.loot_name] = chest.loot_num
-                player.map[int(player.y)][int(player.x)] = '?'
                 player.map[int(player.y)][int(player.x)] = '?'
                 del chests[(int(player.y), int(player.x))]
         if event.type == pygame.KEYDOWN:
@@ -434,13 +455,16 @@ while running:
                     player.inventory[chest.loot_name] = chest.loot_num
                 player.map[int(player.y)][int(player.x)] = '?'
                 del chest
-            direction, move = set_direction_k(event, direction, move)
-        if event.type == pygame.KEYUP:
-            move = False
-            direction = None
+            set_direction_uldr(player, event)
+        if event.type == pygame.JOYAXISMOTION and event.axis in (2, 3):
+            print('ok')
+            set_direction_rs(player, stick)
+
+        if event.type in (pygame.KEYUP, pygame.KEYDOWN):
+            direction, move = set_direction_wasd(event)
 
     if stick is not None and flag:
-        direction, move = set_direction_j(stick, direction, move)
+        direction, move = set_direction_ls(stick)
 
     time += clock.tick()
     if move and time >= 150:
