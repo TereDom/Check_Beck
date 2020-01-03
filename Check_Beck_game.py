@@ -57,9 +57,11 @@ class Inventory:
 
     def draw_health_bar(self):
         pygame.draw.rect(screen, (255, 255, 255), (int(self.x + self.width * 0.059), height // 100,
-                                                   int(self.width - self.width * 0.059 * 2 + 1), height * 0.07), 1)
+                                                   int(width - self.width * 0.059 * 2 - self.x) + 1, height * 0.07), 1)
         pygame.draw.rect(screen, pygame.color.Color('red'), (int(self.x + self.width * 0.059) + 1,
-                                                             height * 0.012, HEALTH_BAR_SIZE / HP * player.hp,
+                                                             height * 0.012,
+                                                             int(width - self.width * 0.059 * 2 - self.x)
+                                                             / HP * player.hp - 1,
                                                              height * 0.066))
 
     def draw_slots(self):
@@ -67,14 +69,24 @@ class Inventory:
         pygame.draw.rect(screen, (255, 255, 255), (int(self.x + self.width * 0.059), height * 0.13, self.width * 0.882,
                                                    height * 0.13), 1)
 
-        pygame.draw.rect(screen, (255, 255, 255), (int(self.x + self.width * 0.157), 70, 55, 55), 1)
-        pygame.draw.rect(screen, (255, 255, 255), (763, 70, 55, 55), 1)
+        pygame.draw.rect(screen, (255, 255, 255), (int(self.x + self.width * 0.157), height * 0.14, width_of_slots,
+                                                   width_of_slots), 1)
 
-        pygame.draw.rect(screen, (255, 255, 255), (658, 155, 55, 55), 1)
-        pygame.draw.rect(screen, (255, 255, 255), (783, 155, 55, 55), 1)
-        pygame.draw.rect(screen, (255, 255, 255), (658, 240, 55, 55), 1)
-        pygame.draw.rect(screen, (255, 255, 255), (783, 240, 55, 55), 1)
-        pygame.draw.rect(screen, (255, 255, 255), (658, 310, 180, 180), 1)
+        pygame.draw.rect(screen, (255, 255, 255), (int(self.x + self.width * 0.57), height * 0.14, width_of_slots,
+                                                   width_of_slots), 1)
+
+        pygame.draw.rect(screen, (255, 255, 255), (int(self.x + self.width * 0.059), height * 0.31, width_of_slots,
+                                                   width_of_slots), 1)
+
+        pygame.draw.rect(screen, (255, 255, 255), (int(self.x + self.width * 0.67), height * 0.31, width_of_slots,
+                                                   width_of_slots), 1)
+
+        pygame.draw.rect(screen, (255, 255, 255), (int(self.x + self.width * 0.059), height * 0.48, width_of_slots,
+                                                   width_of_slots), 1)
+        pygame.draw.rect(screen, (255, 255, 255), (int(self.x + self.width * 0.67), height * 0.48,  width_of_slots,
+                                                   width_of_slots), 1)
+        pygame.draw.rect(screen, (255, 255, 255), (int(self.x + self.width * 0.059), height * 0.62, self.width * 0.88,
+                                                   self.width * 0.88), 1)
 
     def upgrade(self):
         screen.fill((51, 20, 20), pygame.Rect(646, 0, 850, 500))
