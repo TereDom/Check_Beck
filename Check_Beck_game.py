@@ -64,9 +64,8 @@ class Inventory:
 
     def draw_slots(self):
         width_of_slots = 55
-        pygame.draw.rect(screen, (255, 255, 255), (658, 65, 180, 65), 1)
-        '''(int(self.x + self.width * 0.157), height * 0.13, self.width * 0.882,
-         height * 13), 1)'''
+        pygame.draw.rect(screen, (255, 255, 255), (int(self.x + self.width * 0.059), height * 0.13, self.width * 0.882,
+                                                   height * 0.13), 1)
 
         pygame.draw.rect(screen, (255, 255, 255), (int(self.x + self.width * 0.157), 70, 55, 55), 1)
         pygame.draw.rect(screen, (255, 255, 255), (763, 70, 55, 55), 1)
