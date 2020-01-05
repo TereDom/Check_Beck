@@ -6,6 +6,7 @@ pygame.init()
 inventory_sprites = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
+monsters_group = pygame.sprite.Group()
 size = width, height = 850, 500
 screen = pygame.display.set_mode(size)
 tile_width = tile_height = 50
@@ -29,7 +30,7 @@ def load_level(filename):
 
 
 def generate_level(level):
-    new_player, x, y, chests = None, None, None, dict()
+    new_player, x, y, chests, monsters = None, None, None, dict(), dict()
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == '.':
@@ -39,6 +40,7 @@ def generate_level(level):
             elif level[y][x] == '!':
                 Tile("empty", x, y)
                 chests[(y, x)] = Chest((x, y))
+                monsters[(y - 1, x - 1)] = random.choices(LIST_OF_MONSTERS)[0]((y - 1, x - 1))
             elif level[y][x] == '@':
                 Tile('empty', x, y)
             elif level[y][x] == '*':
@@ -46,7 +48,7 @@ def generate_level(level):
     gun = FirstWeapon()
     knife = SecondWeapon()
     new_player = Player(3, 3, load_level('map.txt'))
-    return new_player, x, y, chests, gun, knife
+    return new_player, x, y, chests, gun, knife, monsters
 
 
 def upgrade_inventory():
@@ -197,12 +199,6 @@ class GameMap:
         pass
 
 
-class Creatures:
-    def __init__(self, hp, coords):
-        self.hp = hp
-        self.coords = coords
-
-
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y, map):
         super().__init__(all_sprites)
@@ -271,28 +267,48 @@ class Camera:
         self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
 
 
-class Bat(Creatures):
-    def __init__(self, hp, coords):
-        super().__init__(hp, coords)
-        self.__damage__ = None
+class Bat(pygame.sprite.Sprite):
+    def __init__(self, coords):
+        super().__init__(monsters_group)
+        self.image = load_image('bat_down.png')
+        self.HP = 50
+        self.DAMAGE = None
+        self.coords = coords
+        self.rect = self.coords
 
 
-class Dragon(Creatures):
-    def __init__(self, hp, coords):
-        super().__init__(hp, coords)
-        self.__damage__ = None
+class Dragon(pygame.sprite.Sprite):
+    def __init__(self, coords):
+        super().__init__(monsters_group)
+        self.image = load_image('dragon_down.png')
+        self.HP = 50
+        self.DAMAGE = None
+        self.coords = coords
+        self.rect = self.coords
 
 
-class SkeletonBomber(Creatures):
-    def __init__(self, hp, coords):
-        super().__init__(hp, coords)
-        self.__damage__ = None
+class SkeletonBomber(pygame.sprite.Sprite):
+    def __init__(self, coords):
+        super().__init__(monsters_group)
+        self.image = load_image('SkeletonBomber_down.png')
+        self.HP = 50
+        self.DAMAGE = None
+        self.coords = coords
+        self.rect = self.coords
 
 
-class Frankenstein(Creatures):
-    def __init__(self, hp, coords):
-        super().__init__(hp, coords)
-        self.__damage__ = None
+class Frankenstein(pygame.sprite.Sprite):
+    def __init__(self, coords):
+        super().__init__(monsters_group)
+        self.image = load_image('frankenstein_down.png')
+        self.HP = 50
+        self.DAMAGE = None
+        self.coords = coords
+        self.rect = self.coords
+
+
+LIST_OF_MONSTERS = [Bat((None, None)), Dragon((None, None)),
+                    SkeletonBomber((None, None)), Frankenstein((None, None))]
 
 
 class Potion(pygame.sprite.Sprite):
@@ -371,7 +387,7 @@ class SecondWeapon(pygame.sprite.Sprite):
 
 player_image = load_image('Player_down.png')
 gamemap = GameMap(98, 98)
-player, level_x, level_y, chests, gun, knife = generate_level(load_level('map.txt'))
+player, level_x, level_y, chests, gun, knife, monsters = generate_level(load_level('map.txt'))
 
 if pygame.joystick.get_count():
     stick = pygame.joystick.Joystick(0)
@@ -441,8 +457,9 @@ while running:
 
     gamemap.render()
     all_sprites.draw(screen)
+    monsters_group.draw(screen)
     upgrade_inventory()
-#   inventory_sprites.draw(screen)
+    inventory_sprites.draw(screen)
     pygame.display.flip()
 
 if stick is not None:
