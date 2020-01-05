@@ -287,11 +287,36 @@ class Bat(pygame.sprite.Sprite):
         self.HP = 50
         self.DAMAGE = None
         self.coords = coords
+        self.rage = False
         self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
         self.direction = 'down'
 
     def update(self, direction):
-        pass
+        x = int(self.coords[0])
+        y = int(self.coords[1])
+        if not self.rage:
+            if (direction == 'up' and gamemap.map[y + (1 if self.coords[1] % 1 != 0 else 0) - 1][x] != '#' and
+                    gamemap.map[y + (1 if self.coords[1] % 1 != 0 else 0) - 1]
+                    [x + (1 if self.coords[0] % 1 != 0 else 0)] != '#'):
+                self.rect = self.rect.move(0, -25)
+                self.coords[1] -= 0.5
+                self.direction = 'up'
+            elif (direction == 'down' and gamemap.map[y + 1][x] != "#" and
+                    gamemap.map[y + 1][x + (1 if self.coords[0] % 1 != 0 else 0)] != '#'):
+                self.rect = self.rect.move(0, 25)
+                self.coords[1] += 0.5
+                self.direction = 'down'
+            elif (direction == 'right' and gamemap.map[y][x + 1] != '#' and
+                    gamemap.map[y + (1 if self.coords[1] % 1 != 0 else 0)][x + 1] != '#'):
+                self.rect = self.rect.move(25, 0)
+                self.coords[0] += 0.5
+                self.direction = 'right'
+            elif (direction == 'left' and gamemap.map[y][x + (1 if self.coords[0] % 1 != 0 else 0) - 1] != '#' and
+                    gamemap.map[y + (1 if self.coords[1] % 1 != 0 else 0)]
+                    [x + (1 if self.coords[0] % 1 != 0 else 0) - 1] != '#'):
+                self.rect = self.rect.move(-25, 0)
+                self.coords[0] -= 0.5
+                self.direction = 'left'
 
 
 class Dragon(pygame.sprite.Sprite):
