@@ -7,6 +7,7 @@ inventory_sprites = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 monsters_group = pygame.sprite.Group()
+LIST_OF_MONSTERS = ['Bat', 'Dragon', 'SkeletonBomber', 'Frankenstein']
 size = width, height = 850, 500
 screen = pygame.display.set_mode(size)
 tile_width = tile_height = 50
@@ -25,7 +26,6 @@ def load_level(filename):
     filename = "data/" + filename
     with open(filename, 'r') as mapFile:
         level_map = [line.strip() for line in mapFile]
-    max_width = max(map(len, level_map))
     return level_map
 
 
@@ -40,15 +40,28 @@ def generate_level(level):
             elif level[y][x] == '!':
                 Tile("empty", x, y)
                 chests[(y, x)] = Chest((x, y))
-                monsters[(y - 1, x - 1)] = random.choices(LIST_OF_MONSTERS)[0]((y - 1, x - 1))
+                monsters[(y - 1, x - 1)] = random_monster(random.choices(LIST_OF_MONSTERS)[0],
+                                                          (x - 1, y - 1))
             elif level[y][x] == '@':
                 Tile('empty', x, y)
             elif level[y][x] == '*':
                 Tile('door', x, y)
     gun = FirstWeapon()
     knife = SecondWeapon()
-    new_player = Player(3, 3, load_level('map.txt'))
-    return new_player, x, y, chests, gun, knife, monsters
+    new_player = Player(3, 3)
+    gamemap = GameMap(98, 98, load_level('map.txt'))
+    return gamemap, new_player, x, y, chests, gun, knife, monsters
+
+
+def random_monster(name, coords):
+    if name == 'Bat':
+        return Bat(coords)
+    elif name == 'Dragon':
+        return Dragon(coords)
+    elif name == 'SkeletonBomber':
+        return SkeletonBomber(coords)
+    elif name == 'Frankenstein':
+        return Frankenstein(coords)
 
 
 def upgrade_inventory():
@@ -182,13 +195,15 @@ class Tile(pygame.sprite.Sprite):
 
 
 class GameMap:
-    def __init__(self, width, height):
+    def __init__(self, width, height, map):
         self.width = width
         self.height = height
         self.board = list(load_level('map.txt'))
         self.left = 0
         self.top = 0
         self.cell_size = 0
+        self.map = map
+        self.map = [list(i) for i in self.map]
 
     def set_view(self, left, top, cell_size):
         self.left = left
@@ -200,7 +215,7 @@ class GameMap:
 
 
 class Player(pygame.sprite.Sprite):
-    def __init__(self, pos_x, pos_y, map):
+    def __init__(self, pos_x, pos_y):
         super().__init__(all_sprites)
         self.image = player_image
         self.inventory = dict()
@@ -208,34 +223,32 @@ class Player(pygame.sprite.Sprite):
         self.x, self.y = pos_x, pos_y
         self.image = load_image('Player_down.png')
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
-        self.map = map
-        self.map = [list(i) for i in self.map]
         self.hp = HP
         self.direction = 'down'
 
     def update(self, direction):
         x = int(self.x)
         y = int(self.y)
-        if (direction == 'up' and self.map[y + (1 if self.y % 1 != 0 else 0) - 1][x] != '#' and
-                self.map[y + (1 if self.y % 1 != 0 else 0) - 1][x + (1 if self.x % 1 != 0 else 0)] != '#'):
+        if (direction == 'up' and gamemap.map[y + (1 if self.y % 1 != 0 else 0) - 1][x] != '#' and
+                gamemap.map[y + (1 if self.y % 1 != 0 else 0) - 1][x + (1 if self.x % 1 != 0 else 0)] != '#'):
             self.rect = self.rect.move(0, -25)
             self.y -= 0.5
             self.image = load_image('Player_up.png')
             self.direction = 'up'
-        if (direction == 'down' and self.map[y + 1][x] != "#" and
-                self.map[y + 1][x + (1 if self.x % 1 != 0 else 0)] != '#'):
+        elif (direction == 'down' and gamemap.map[y + 1][x] != "#" and
+              gamemap.map[y + 1][x + (1 if self.x % 1 != 0 else 0)] != '#'):
             self.rect = self.rect.move(0, 25)
             self.y += 0.5
             self.image = load_image('Player_down.png')
             self.direction = 'down'
-        if (direction == 'right' and self.map[y][x + 1] != '#' and
-                self.map[y + (1 if self.y % 1 != 0 else 0)][x + 1] != '#'):
+        elif (direction == 'right' and gamemap.map[y][x + 1] != '#' and
+              gamemap.map[y + (1 if self.y % 1 != 0 else 0)][x + 1] != '#'):
             self.rect = self.rect.move(25, 0)
             self.x += 0.5
             self.image = load_image('Player_right.png')
             self.direction = 'right'
-        if (direction == 'left' and self.map[y][x + (1 if self.x % 1 != 0 else 0) - 1] != '#' and
-                self.map[y + (1 if self.y % 1 != 0 else 0)][x + (1 if self.x % 1 != 0 else 0) - 1] != '#'):
+        elif (direction == 'left' and gamemap.map[y][x + (1 if self.x % 1 != 0 else 0) - 1] != '#' and
+              gamemap.map[y + (1 if self.y % 1 != 0 else 0)][x + (1 if self.x % 1 != 0 else 0) - 1] != '#'):
             self.rect = self.rect.move(-25, 0)
             self.x -= 0.5
             self.image = load_image('Player_left.png')
@@ -269,46 +282,49 @@ class Camera:
 
 class Bat(pygame.sprite.Sprite):
     def __init__(self, coords):
-        super().__init__(monsters_group)
+        super().__init__(all_sprites, monsters_group)
         self.image = load_image('bat_down.png')
         self.HP = 50
         self.DAMAGE = None
         self.coords = coords
-        self.rect = self.coords
+        self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
+        self.direction = 'down'
+
+    def update(self, direction):
+        pass
 
 
 class Dragon(pygame.sprite.Sprite):
     def __init__(self, coords):
-        super().__init__(monsters_group)
+        super().__init__(all_sprites, monsters_group)
         self.image = load_image('dragon_down.png')
         self.HP = 50
         self.DAMAGE = None
         self.coords = coords
-        self.rect = self.coords
+        self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
+        self.direction = 'down'
 
 
 class SkeletonBomber(pygame.sprite.Sprite):
     def __init__(self, coords):
-        super().__init__(monsters_group)
+        super().__init__(all_sprites, monsters_group)
         self.image = load_image('SkeletonBomber_down.png')
         self.HP = 50
         self.DAMAGE = None
         self.coords = coords
-        self.rect = self.coords
+        self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
+        self.direction = 'down'
 
 
 class Frankenstein(pygame.sprite.Sprite):
     def __init__(self, coords):
-        super().__init__(monsters_group)
+        super().__init__(all_sprites, monsters_group)
         self.image = load_image('frankenstein_down.png')
         self.HP = 50
         self.DAMAGE = None
         self.coords = coords
-        self.rect = self.coords
-
-
-LIST_OF_MONSTERS = [Bat((None, None)), Dragon((None, None)),
-                    SkeletonBomber((None, None)), Frankenstein((None, None))]
+        self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
+        self.direction = 'down'
 
 
 class Potion(pygame.sprite.Sprite):
@@ -386,8 +402,7 @@ class SecondWeapon(pygame.sprite.Sprite):
 
 
 player_image = load_image('Player_down.png')
-gamemap = GameMap(98, 98)
-player, level_x, level_y, chests, gun, knife, monsters = generate_level(load_level('map.txt'))
+gamemap, player, level_x, level_y, chests, gun, knife, monsters = generate_level(load_level('map.txt'))
 
 if pygame.joystick.get_count():
     stick = pygame.joystick.Joystick(0)
@@ -416,24 +431,24 @@ while running:
         if event.type == pygame.JOYBUTTONDOWN:
             if event.button == 7 or event.button == 6:
                 running = False
-            if event.button == 0 and player.map[int(player.y)][int(player.x)] == '!':
+            if event.button == 0 and gamemap.map[int(player.y)][int(player.x)] == '!':
                 chest = chests[(int(player.y), int(player.x))]
                 chest.open_chest()
                 if chest.loot_name in player.inventory.keys():
                     player.inventory[chest.loot_name] += chest.loot_num
                 else:
                     player.inventory[chest.loot_name] = chest.loot_num
-                player.map[int(player.y)][int(player.x)] = '?'
+                gamemap.map[int(player.y)][int(player.x)] = '?'
                 del chests[(int(player.y), int(player.x))]
         if event.type == pygame.KEYDOWN:
-            if player.map[int(player.y)][int(player.x)] == '!' and event.key == pygame.K_e:
+            if gamemap.map[int(player.y)][int(player.x)] == '!' and event.key == pygame.K_e:
                 chest = chests[(int(player.y), int(player.x))]
                 chest.open_chest()
                 if chest.loot_name in player.inventory.keys():
                     player.inventory[chest.loot_name] += chest.loot_num
                 else:
                     player.inventory[chest.loot_name] = chest.loot_num
-                player.map[int(player.y)][int(player.x)] = '?'
+                gamemap.map[int(player.y)][int(player.x)] = '?'
                 del chest
             set_direction_uldr(player, event)
         if event.type == pygame.JOYAXISMOTION and event.axis in (2, 3):
