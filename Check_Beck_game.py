@@ -41,11 +41,11 @@ def generate_level(level):
                 chests[(y, x)] = Chest((x, y))
             elif level[y][x] == '@':
                 Tile('empty', x, y)
+
     gun = FirstWeapon()
     knife = SecondWeapon()
-    inventory = Inventory(width, height)
     new_player = Player(3, 3, load_level('map.txt'))
-    return new_player, x, y, chests, gun, knife, inventory
+    return new_player, x, y, chests, gun, knife
 
 
 class Inventory:
@@ -101,7 +101,6 @@ class Inventory:
         self.draw_health_bar()
         self.draw_slots()
         inventory_sprites.draw(screen)
-
 
 
 
@@ -287,7 +286,7 @@ class Potion(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(inventory_sprites)
         self.image = load_image('potion.png')
-        self.rect = (783, 150)
+        self.rect = (inventory.x + ((inventory.width - int(inventory.width * 0.88)) // 2), height * 0.31)
 
     def update(self):
         pass
@@ -297,7 +296,8 @@ class Key(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(inventory_sprites)
         self.image = load_image('key.png')
-        self.rect = (658, 240)
+        self.rect = (inventory.x + ((inventory.width - int(inventory.width * 0.88)) // 2)
+                                                   + int(inventory.width * 0.88) - 55, height * 0.31)
 
     def update(self):
         pass
@@ -307,12 +307,12 @@ class Ammo(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(inventory_sprites)
         self.image = load_image('ammo.png')
-        self.rect = (658, 150)
+        self.rect = (inventory.x + ((inventory.width - int(inventory.width * 0.88)) // 2), height * 0.48)
 
     def update(self):
         pass
 
-
+inventory = Inventory(width, height)
 CHEST_LOOT = [Potion(), Ammo(), Key()]
 LOOTS_WEIGHTS = [30, 30, 10]
 
@@ -347,19 +347,23 @@ class FirstWeapon(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(inventory_sprites)
         self.image = load_image('gun.png')
-        self.rect = (678, 70)
+        self.rect = (inventory.x + ((inventory.width - int(inventory.width * 0.88)) // 2)
+                                                   + (int(inventory.width * 0.88) - 55 * 2) // 4, height * 0.14)
 
 
 class SecondWeapon(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(inventory_sprites)
         self.image = load_image('knife.png')
-        self.rect = (763, 70)
+        self.rect = (inventory.x + ((inventory.width - int(inventory.width * 0.88)) // 2)
+                                                   + int(inventory.width * 0.88) - (int(inventory.width * 0.88)
+                                                                               - 55 * 2) // 4
+                                                   - 55, height * 0.14)
 
 
 player_image = load_image('Player_down.png')
 gamemap = GameMap(98, 98)
-player, level_x, level_y, chests, gun, knife, inventory = generate_level(load_level('map.txt'))
+player, level_x, level_y, chests, gun, knife = generate_level(load_level('map.txt'))
 
 if pygame.joystick.get_count():
     stick = pygame.joystick.Joystick(0)
@@ -422,7 +426,7 @@ while running:
         camera.apply(sprite)
 
     gamemap.render()
-#    all_sprites.draw(screen)
+    all_sprites.draw(screen)
     inventory.upgrade()
     pygame.display.flip()
 
