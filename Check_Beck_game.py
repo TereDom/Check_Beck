@@ -2,6 +2,7 @@ import pygame
 import os
 import random
 
+print(int(1.5))
 pygame.init()
 inventory_sprites = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
@@ -41,7 +42,7 @@ def generate_level(level):
                 Tile("empty", x, y)
                 chests[(y, x)] = Chest((x, y))
                 monsters[(y - 1, x - 1)] = random_monster(random.choices(LIST_OF_MONSTERS)[0],
-                                                          (x - 1, y - 1))
+                                                          [x - 1, y - 1])
             elif level[y][x] == '@':
                 Tile('empty', x, y)
             elif level[y][x] == '*':
@@ -295,28 +296,44 @@ class Bat(pygame.sprite.Sprite):
         x = int(self.coords[0])
         y = int(self.coords[1])
         if not self.rage:
-            if (direction == 'up' and gamemap.map[y + (1 if self.coords[1] % 1 != 0 else 0) - 1][x] != '#' and
-                    gamemap.map[y + (1 if self.coords[1] % 1 != 0 else 0) - 1]
-                    [x + (1 if self.coords[0] % 1 != 0 else 0)] != '#'):
-                self.rect = self.rect.move(0, -25)
-                self.coords[1] -= 0.5
-                self.direction = 'up'
-            elif (direction == 'down' and gamemap.map[y + 1][x] != "#" and
-                    gamemap.map[y + 1][x + (1 if self.coords[0] % 1 != 0 else 0)] != '#'):
-                self.rect = self.rect.move(0, 25)
-                self.coords[1] += 0.5
-                self.direction = 'down'
-            elif (direction == 'right' and gamemap.map[y][x + 1] != '#' and
-                    gamemap.map[y + (1 if self.coords[1] % 1 != 0 else 0)][x + 1] != '#'):
-                self.rect = self.rect.move(25, 0)
-                self.coords[0] += 0.5
-                self.direction = 'right'
-            elif (direction == 'left' and gamemap.map[y][x + (1 if self.coords[0] % 1 != 0 else 0) - 1] != '#' and
-                    gamemap.map[y + (1 if self.coords[1] % 1 != 0 else 0)]
-                    [x + (1 if self.coords[0] % 1 != 0 else 0) - 1] != '#'):
-                self.rect = self.rect.move(-25, 0)
-                self.coords[0] -= 0.5
-                self.direction = 'left'
+            if direction == 'up':
+                if (gamemap.map[y + (1 if self.coords[1] % 1 != 0 else 0) - 1][x] != '#' and
+                        gamemap.map[y + (1 if self.coords[1] % 1 != 0 else 0) - 1]
+                        [x + (1 if self.coords[0] % 1 != 0 else 0)] != '#'):
+                    self.rect = self.rect.move(0, -25)
+                    self.coords[1] -= 0.5
+                    self.direction = 'up'
+                else:
+                    self.direction = 'left'
+
+            if direction == 'down':
+                if (gamemap.map[y + 1][x] != "#" and
+                        gamemap.map[y + 1][x + (1 if self.coords[0] % 1 != 0 else 0)] != '#'):
+                    self.rect = self.rect.move(0, 25)
+                    self.coords[1] += 0.5
+                    self.direction = 'down'
+                else:
+                    self.direction = 'right'
+
+            if direction == 'right':
+                if (gamemap.map[y][x + 1] != '#' and
+                        gamemap.map[y + (1 if self.coords[1] % 1 != 0 else 0)][x + 1] != '#'):
+                    self.rect = self.rect.move(25, 0)
+                    self.coords[0] += 0.5
+                    self.direction = 'right'
+                else:
+                    self.direction = 'up'
+
+            if direction == 'left':
+                if (gamemap.map[y][x + (1 if self.coords[0] % 1 != 0 else 0) - 1] != '#' and
+                        gamemap.map[y + (1 if self.coords[1] % 1 != 0 else 0)]
+                        [x + (1 if self.coords[0] % 1 != 0 else 0) - 1] != '#'):
+                    self.rect = self.rect.move(-25, 0)
+                    self.coords[0] -= 0.5
+                    self.direction = 'left'
+                else:
+                    self.direction = 'down'
+
 
 
 class Dragon(pygame.sprite.Sprite):
@@ -328,6 +345,49 @@ class Dragon(pygame.sprite.Sprite):
         self.coords = coords
         self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
         self.direction = 'down'
+        self.rage = False
+
+    def update(self, direction):
+        x = int(self.coords[0])
+        y = int(self.coords[1])
+        if not self.rage:
+            if direction == 'up':
+                if (gamemap.map[y + (1 if self.coords[1] % 1 != 0 else 0) - 1][x] != '#' and
+                        gamemap.map[y + (1 if self.coords[1] % 1 != 0 else 0) - 1]
+                        [x + (1 if self.coords[0] % 1 != 0 else 0)] != '#'):
+                    self.rect = self.rect.move(0, -25)
+                    self.coords[1] -= 0.5
+                    self.direction = 'up'
+                else:
+                    self.direction = 'left'
+
+            if direction == 'down':
+                if (gamemap.map[y + 1][x] != "#" and
+                        gamemap.map[y + 1][x + (1 if self.coords[0] % 1 != 0 else 0)] != '#'):
+                    self.rect = self.rect.move(0, 25)
+                    self.coords[1] += 0.5
+                    self.direction = 'down'
+                else:
+                    self.direction = 'right'
+
+            if direction == 'right':
+                if (gamemap.map[y][x + 1] != '#' and
+                        gamemap.map[y + (1 if self.coords[1] % 1 != 0 else 0)][x + 1] != '#'):
+                    self.rect = self.rect.move(25, 0)
+                    self.coords[0] += 0.5
+                    self.direction = 'right'
+                else:
+                    self.direction = 'up'
+
+            if direction == 'left':
+                if (gamemap.map[y][x + (1 if self.coords[0] % 1 != 0 else 0) - 1] != '#' and
+                        gamemap.map[y + (1 if self.coords[1] % 1 != 0 else 0)]
+                        [x + (1 if self.coords[0] % 1 != 0 else 0) - 1] != '#'):
+                    self.rect = self.rect.move(-25, 0)
+                    self.coords[0] -= 0.5
+                    self.direction = 'left'
+                else:
+                    self.direction = 'down'
 
 
 class SkeletonBomber(pygame.sprite.Sprite):
@@ -339,6 +399,49 @@ class SkeletonBomber(pygame.sprite.Sprite):
         self.coords = coords
         self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
         self.direction = 'down'
+        self.rage = False
+
+    def update(self, direction):
+        x = int(self.coords[0])
+        y = int(self.coords[1])
+        if not self.rage:
+            if direction == 'up':
+                if (gamemap.map[y + (1 if self.coords[1] % 1 != 0 else 0) - 1][x] != '#' and
+                        gamemap.map[y + (1 if self.coords[1] % 1 != 0 else 0) - 1]
+                        [x + (1 if self.coords[0] % 1 != 0 else 0)] != '#'):
+                    self.rect = self.rect.move(0, -25)
+                    self.coords[1] -= 0.5
+                    self.direction = 'up'
+                else:
+                    self.direction = 'left'
+
+            if direction == 'down':
+                if (gamemap.map[y + 1][x] != "#" and
+                        gamemap.map[y + 1][x + (1 if self.coords[0] % 1 != 0 else 0)] != '#'):
+                    self.rect = self.rect.move(0, 25)
+                    self.coords[1] += 0.5
+                    self.direction = 'down'
+                else:
+                    self.direction = 'right'
+
+            if direction == 'right':
+                if (gamemap.map[y][x + 1] != '#' and
+                        gamemap.map[y + (1 if self.coords[1] % 1 != 0 else 0)][x + 1] != '#'):
+                    self.rect = self.rect.move(25, 0)
+                    self.coords[0] += 0.5
+                    self.direction = 'right'
+                else:
+                    self.direction = 'up'
+
+            if direction == 'left':
+                if (gamemap.map[y][x + (1 if self.coords[0] % 1 != 0 else 0) - 1] != '#' and
+                        gamemap.map[y + (1 if self.coords[1] % 1 != 0 else 0)]
+                        [x + (1 if self.coords[0] % 1 != 0 else 0) - 1] != '#'):
+                    self.rect = self.rect.move(-25, 0)
+                    self.coords[0] -= 0.5
+                    self.direction = 'left'
+                else:
+                    self.direction = 'down'
 
 
 class Frankenstein(pygame.sprite.Sprite):
@@ -350,6 +453,49 @@ class Frankenstein(pygame.sprite.Sprite):
         self.coords = coords
         self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
         self.direction = 'down'
+        self.rage = False
+
+    def update(self, direction):
+        x = int(self.coords[0])
+        y = int(self.coords[1])
+        if not self.rage:
+            if direction == 'up':
+                if (gamemap.map[y + (1 if self.coords[1] % 1 != 0 else 0) - 1][x] != '#' and
+                        gamemap.map[y + (1 if self.coords[1] % 1 != 0 else 0) - 1]
+                        [x + (1 if self.coords[0] % 1 != 0 else 0)] != '#'):
+                    self.rect = self.rect.move(0, -25)
+                    self.coords[1] -= 0.5
+                    self.direction = 'up'
+                else:
+                    self.direction = 'left'
+
+            if direction == 'down':
+                if (gamemap.map[y + 1][x] != "#" and
+                        gamemap.map[y + 1][x + (1 if self.coords[0] % 1 != 0 else 0)] != '#'):
+                    self.rect = self.rect.move(0, 25)
+                    self.coords[1] += 0.5
+                    self.direction = 'down'
+                else:
+                    self.direction = 'right'
+
+            if direction == 'right':
+                if (gamemap.map[y][x + 1] != '#' and
+                        gamemap.map[y + (1 if self.coords[1] % 1 != 0 else 0)][x + 1] != '#'):
+                    self.rect = self.rect.move(25, 0)
+                    self.coords[0] += 0.5
+                    self.direction = 'right'
+                else:
+                    self.direction = 'up'
+
+            if direction == 'left':
+                if (gamemap.map[y][x + (1 if self.coords[0] % 1 != 0 else 0) - 1] != '#' and
+                        gamemap.map[y + (1 if self.coords[1] % 1 != 0 else 0)]
+                        [x + (1 if self.coords[0] % 1 != 0 else 0) - 1] != '#'):
+                    self.rect = self.rect.move(-25, 0)
+                    self.coords[0] -= 0.5
+                    self.direction = 'left'
+                else:
+                    self.direction = 'down'
 
 
 class Potion(pygame.sprite.Sprite):
@@ -445,7 +591,6 @@ running = True
 move = False
 direction = None
 flag = True
-
 while running:
     screen.fill(pygame.color.Color("black"))
     for event in pygame.event.get():
@@ -487,9 +632,16 @@ while running:
         direction, move = set_direction_ls(stick)
 
     time += clock.tick()
+
+    if time >= 300:
+        for monster in monsters_group:
+            monster.update(monster.direction)
+
+
     if move and time >= 150:
         player.update(direction)
         time = 0
+
 
     camera.update(player)
     for sprite in all_sprites:
@@ -498,6 +650,7 @@ while running:
     gamemap.render()
     all_sprites.draw(screen)
     monsters_group.draw(screen)
+
     upgrade_inventory()
     inventory_sprites.draw(screen)
     pygame.display.flip()
