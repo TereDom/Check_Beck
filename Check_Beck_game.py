@@ -1,8 +1,8 @@
 import pygame
 import os
 import random
+import copy
 
-print(int(1.5))
 pygame.init()
 inventory_sprites = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
@@ -163,7 +163,6 @@ def set_direction_rs(player, joistick):
             direction = 'down'
         elif axis3 <= -0.1:
             direction = 'up'
-    print(direction)
 
     player.update_direction(direction)
 
@@ -333,7 +332,6 @@ class Bat(pygame.sprite.Sprite):
                     self.direction = 'left'
                 else:
                     self.direction = 'down'
-
 
 
 class Dragon(pygame.sprite.Sprite):
@@ -585,7 +583,8 @@ else:
     stick = None
 
 clock = pygame.time.Clock()
-time = 0
+player_timer = 0
+monster_timer = 0
 camera = Camera()
 running = True
 move = False
@@ -622,7 +621,6 @@ while running:
                 del chest
             set_direction_uldr(player, event)
         if event.type == pygame.JOYAXISMOTION and event.axis in (2, 3):
-            print('ok')
             set_direction_rs(player, stick)
 
         if event.type in (pygame.KEYUP, pygame.KEYDOWN):
@@ -631,17 +629,17 @@ while running:
     if stick is not None and flag:
         direction, move = set_direction_ls(stick)
 
-    time += clock.tick()
+    player_timer += clock.tick()
+    monster_timer += copy.copy(player_timer)
 
-    if time >= 300:
+    if monster_timer >= 150:
         for monster in monsters_group:
             monster.update(monster.direction)
+        monster_timer = 0
 
-
-    if move and time >= 150:
+    if move and player_timer >= 150:
         player.update(direction)
-        time = 0
-
+        player_timer = 0
 
     camera.update(player)
     for sprite in all_sprites:
