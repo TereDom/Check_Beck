@@ -42,7 +42,7 @@ def generate_level(level):
                 Tile("empty", x, y)
                 chests[(y, x)] = Chest((x, y))
                 monsters[(y - 1, x - 1)] = random_monster(random.choices(LIST_OF_MONSTERS)[0],
-                                                          [x - 1, y - 1])
+                                                          [x - 1, y - 1], (x, y))
             elif level[y][x] == '@':
                 Tile('empty', x, y)
             elif level[y][x] == '*':
@@ -54,15 +54,15 @@ def generate_level(level):
     return gamemap, new_player, x, y, chests, gun, knife, monsters
 
 
-def random_monster(name, coords):
+def random_monster(name, coords, chest_coords):
     if name == 'Bat':
-        return Bat(coords)
+        return Bat(coords, chest_coords)
     elif name == 'Dragon':
-        return Dragon(coords)
+        return Dragon(coords, chest_coords)
     elif name == 'SkeletonBomber':
-        return SkeletonBomber(coords)
+        return SkeletonBomber(coords, chest_coords)
     elif name == 'Frankenstein':
-        return Frankenstein(coords)
+        return Frankenstein(coords, chest_coords)
 
 
 def upgrade_inventory():
@@ -281,10 +281,11 @@ class Camera:
 
 
 class Bat(pygame.sprite.Sprite):
-    def __init__(self, coords):
+    def __init__(self, coords, chest_coords):
         super().__init__(all_sprites, monsters_group)
         self.image = load_image('bat_down.png')
         self.HP = 50
+        self.CHEST_COORDS = chest_coords
         self.DAMAGE = None
         self.coords = coords
         self.rage = False
@@ -335,9 +336,10 @@ class Bat(pygame.sprite.Sprite):
 
 
 class Dragon(pygame.sprite.Sprite):
-    def __init__(self, coords):
+    def __init__(self, coords, chest_coords):
         super().__init__(all_sprites, monsters_group)
         self.image = load_image('dragon_down.png')
+        self.CHEST_COORDS = chest_coords
         self.HP = 50
         self.DAMAGE = None
         self.coords = coords
@@ -389,9 +391,10 @@ class Dragon(pygame.sprite.Sprite):
 
 
 class SkeletonBomber(pygame.sprite.Sprite):
-    def __init__(self, coords):
+    def __init__(self, coords, chest_coords):
         super().__init__(all_sprites, monsters_group)
         self.image = load_image('SkeletonBomber_down.png')
+        self.CHEST_COORDS = chest_coords
         self.HP = 50
         self.DAMAGE = None
         self.coords = coords
@@ -443,9 +446,10 @@ class SkeletonBomber(pygame.sprite.Sprite):
 
 
 class Frankenstein(pygame.sprite.Sprite):
-    def __init__(self, coords):
+    def __init__(self, coords, chest_coords):
         super().__init__(all_sprites, monsters_group)
         self.image = load_image('frankenstein_down.png')
+        self.CHEST_COORDS = chest_coords
         self.HP = 50
         self.DAMAGE = None
         self.coords = coords
