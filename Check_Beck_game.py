@@ -298,6 +298,7 @@ class Frankenstein(Creatures):
 class Potion(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(inventory_sprites)
+        self.type = 'Potion'
         self.image = load_image('potion.png')
         self.rect = (785, 150)
 
@@ -308,6 +309,7 @@ class Potion(pygame.sprite.Sprite):
 class Key(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(inventory_sprites)
+        self.type = 'Key'
         self.image = load_image('key.png')
         self.rect = (660, 240)
 
@@ -318,6 +320,7 @@ class Key(pygame.sprite.Sprite):
 class Ammo(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(inventory_sprites)
+        self.type = 'Ammo'
         self.image = load_image('ammo.png')
         self.rect = (660, 150)
 
@@ -337,18 +340,18 @@ class Chest(pygame.sprite.Sprite):
         self.loot_name = random.choices(CHEST_LOOT, weights=LOOTS_WEIGHTS)[0]
         self.rect = self.image.get_rect().move(tile_width * coords[0],
                                                tile_height * coords[1])
-        if str(self.loot_name.__class__) == "<class '__main__.Key'>":
+        if self.loot_name.type == 'Key':
             self.loot_num = 1
             CHEST_LOOT.pop()
             LOOTS_WEIGHTS.pop()
-        elif str(self.loot_name.__class__) == "<class '__main__.Potion'>":
+        elif self.loot_name.type == 'Potion':
             self.loot_num = random.randint(1, 3)
-        elif str(self.loot_name.__class__) == "<class '__main__.Ammo'>":
+        elif self.loot_name.type == 'Ammo':
             self.loot_num = random.randint(5, 20)
 
     def open_chest(self):
         global chests_found
-        pygame.mixer.music.load("data/ammo_picked.mp3") if self.loot_name == 'ammo' \
+        pygame.mixer.music.load("data/ammo_picked.mp3") if self.loot_name.type == 'Ammo' \
             else pygame.mixer.music.load("data/potion_picked.mp3")
         self.image = load_image('open_chest.png')
         pygame.mixer.music.play(1)
@@ -404,9 +407,9 @@ while running:
                 chest = chests[(int(player.y), int(player.x))]
                 chest.open_chest()
                 if chest.loot_name in player.inventory.keys():
-                    player.inventory[chest.loot_name] += chest.loot_num
+                    player.inventory[chest.loot_name.type] += chest.loot_num
                 else:
-                    player.inventory[chest.loot_name] = chest.loot_num
+                    player.inventory[chest.loot_name.type] = chest.loot_num
                 player.map[int(player.y)][int(player.x)] = '?'
                 del chests[(int(player.y), int(player.x))]
         if event.type == pygame.KEYDOWN:
