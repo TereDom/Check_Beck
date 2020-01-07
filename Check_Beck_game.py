@@ -582,7 +582,9 @@ if pygame.joystick.get_count():
 else:
     stick = None
 
-clock = pygame.time.Clock()
+player_clock = pygame.time.Clock()
+monster_clock = pygame.time.Clock()
+
 player_timer = 0
 monster_timer = 0
 camera = Camera()
@@ -629,8 +631,8 @@ while running:
     if stick is not None and flag:
         direction, move = set_direction_ls(stick)
 
-    player_timer += clock.tick()
-    monster_timer += copy.copy(player_timer)
+    player_timer += player_clock.tick()
+    monster_timer += monster_clock.tick()
 
     if monster_timer >= 150:
         for monster in monsters_group:
