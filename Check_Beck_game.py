@@ -294,15 +294,14 @@ class Bat(pygame.sprite.Sprite):
         self.i = 0
 
     def update(self, direction):
-        x = int(self.coords[0])
-        y = int(self.coords[1])
         if not self.rage:
             self.rect = self.rect.move(self.direction[1] * 25, self.direction[2] * 25)
             self.coords[0] += self.direction[1] * 0.5
             self.coords[1] += self.direction[2] * 0.5
             self.i += 1
-            if self.i == 6:
+            if self.i == 4:
                 self.direction = self.change_direction(self.direction)
+                self.i = 0
 
     def change_direction(self, old_dir):
         possible_dir = [('down', 0, 1), ('right', 1, 0), ('up', 0, -1), ('left', -1, 0)]
@@ -324,15 +323,14 @@ class Dragon(pygame.sprite.Sprite):
         self.i = 0
 
     def update(self, direction):
-        x = int(self.coords[0])
-        y = int(self.coords[1])
         if not self.rage:
             self.rect = self.rect.move(self.direction[1] * 25, self.direction[2] * 25)
             self.coords[0] += self.direction[1] * 0.5
             self.coords[1] += self.direction[2] * 0.5
             self.i += 1
-            if self.i == 6:
+            if self.i == 4:
                 self.direction = self.change_direction(self.direction)
+                self.i = 0
 
     def change_direction(self, old_dir):
         possible_dir = [('down', 0, 1), ('right', 1, 0), ('up', 0, -1), ('left', -1, 0)]
@@ -354,15 +352,14 @@ class SkeletonBomber(pygame.sprite.Sprite):
         self.i = 0
 
     def update(self, direction):
-        x = int(self.coords[0])
-        y = int(self.coords[1])
         if not self.rage:
             self.rect = self.rect.move(self.direction[1] * 25, self.direction[2] * 25)
             self.coords[0] += self.direction[1] * 0.5
             self.coords[1] += self.direction[2] * 0.5
             self.i += 1
-            if self.i == 6:
+            if self.i == 4:
                 self.direction = self.change_direction(self.direction)
+                self.i = 0
 
     def change_direction(self, old_dir):
         possible_dir = [('down', 0, 1), ('right', 1, 0), ('up', 0, -1), ('left', -1, 0)]
@@ -384,15 +381,14 @@ class Frankenstein(pygame.sprite.Sprite):
         self.i = 0
 
     def update(self, direction):
-        x = int(self.coords[0])
-        y = int(self.coords[1])
         if not self.rage:
             self.rect = self.rect.move(self.direction[1] * 25, self.direction[2] * 25)
             self.coords[0] += self.direction[1] * 0.5
             self.coords[1] += self.direction[2] * 0.5
             self.i += 1
-            if self.i == 6:
+            if self.i == 4:
                 self.direction = self.change_direction(self.direction)
+                self.i = 0
 
     def change_direction(self, old_dir):
         possible_dir = [('down', 0, 1), ('right', 1, 0), ('up', 0, -1), ('left', -1, 0)]
