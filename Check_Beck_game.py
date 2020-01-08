@@ -87,15 +87,15 @@ class Inventory:
         pygame.draw.rect(screen, (255, 255, 255), (self.x + ((self.width - int(self.width * 0.88)) // 2),
                                                    height * 0.13, int(self.width * 0.88), height * 0.13), 1)
 
-        pygame.draw.rect(screen, (255, 255, 255), (self.x + ((self.width - int(self.width * 0.88)) // 2)
-                                                   + (int(self.width * 0.88) - size_of_slots * 2) // 4,
-                                                   height * 0.14, size_of_slots, size_of_slots), 1)
+        pygame.draw.rect(screen, (255, 255, 255) if player.active_weapon == 2 else (225, 204, 79),
+                         (self.x + ((self.width - int(self.width * 0.88)) // 2) +
+                          (int(self.width * 0.88) - size_of_slots * 2) // 4, height * 0.14,
+                          size_of_slots, size_of_slots), 1)
 
-        pygame.draw.rect(screen, (255, 255, 255), (self.x + ((self.width - int(self.width * 0.88)) // 2)
-                                                   + int(self.width * 0.88) - (int(self.width * 0.88)
-                                                                               - size_of_slots * 2) // 4
-                                                   - size_of_slots,
-                                                   height * 0.14, size_of_slots, size_of_slots), 1)
+        pygame.draw.rect(screen, (255, 255, 255) if player.active_weapon == 1 else (225, 204, 79),
+                         (self.x + ((self.width - int(self.width * 0.88)) // 2) +
+                          int(self.width * 0.88) - (int(self.width * 0.88) - size_of_slots * 2) // 4
+                          - size_of_slots, height * 0.14, size_of_slots, size_of_slots), 1)
 
         pygame.draw.rect(screen, (255, 255, 255), (self.x + ((self.width - int(self.width * 0.88)) // 2), height * 0.31,
                                                    size_of_slots, size_of_slots), 1)
@@ -277,8 +277,8 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(all_sprites)
         self.image = player_image
-        self.inventory = {'Ammo': 0, 'Potion': 0, 'Key': 0}
-        self.weapons = []
+        self.active_weapon = 1
+        self.inventory = {'Ammo': 15, 'Potion': 0, 'Key': 0}
         self.x, self.y = pos_x, pos_y
         self.image = load_image('Player_down.png')
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
@@ -323,6 +323,19 @@ class Player(pygame.sprite.Sprite):
             self.image = load_image('Player_left.png')
         elif direction == 'right':
             self.image = load_image('Player_right.png')
+
+    def hit(self):
+        if self.active_weapon == 1:
+            if player.inventory['Ammo']:
+                pygame.mixer.music.load("data/shot.mp3")
+                pygame.mixer.music.play(1)
+                player.inventory['Ammo'] -= 1
+            elif not player.inventory['Ammo']:
+                pygame.mixer.music.load("data/noAmmo_shot.mp3")
+                pygame.mixer.music.play(1)
+        elif self.active_weapon == 2:
+            pygame.mixer.music.load("data/hit.mp3")
+            pygame.mixer.music.play(1)
 
 
 class Camera:
@@ -480,7 +493,7 @@ class Key(pygame.sprite.Sprite):
         self.type = 'Key'
         self.image = load_image('key.png')
         self.rect = (inventory.x + ((inventory.width - int(inventory.width * 0.88)) // 2)
-                                                   + int(inventory.width * 0.88) - 55, height * 0.30)
+                     + int(inventory.width * 0.88) - 55, height * 0.30)
 
     def update(self):
         pass
@@ -502,7 +515,7 @@ class FirstWeapon(pygame.sprite.Sprite):
         super().__init__(inventory_sprites, weapons_group)
         self.image = load_image('gun.png')
         self.rect = (inventory.x + ((inventory.width - int(inventory.width * 0.88)) // 2)
-                                                   + (int(inventory.width * 0.88) - 55 * 2) // 4, height * 0.14)
+                     + (int(inventory.width * 0.88) - 55 * 2) // 4, height * 0.14)
 
 
 class SecondWeapon(pygame.sprite.Sprite):
@@ -510,8 +523,9 @@ class SecondWeapon(pygame.sprite.Sprite):
         super().__init__(inventory_sprites, weapons_group)
         self.image = load_image('knife.png')
         self.rect = (inventory.x + ((inventory.width - int(inventory.width * 0.88)) // 2)
-                                                   + int(inventory.width * 0.88) - (int(inventory.width * 0.88)
-                                                                               - 55 * 2) // 4 - 55, height * 0.14)
+                     + int(inventory.width * 0.88) - (int(inventory.width * 0.88)
+                                                      - 55 * 2) // 4 - 55, height * 0.14)
+
 
 inventory = Inventory(width, height)
 CHEST_LOOT = [Potion(), Ammo(), Key()]
@@ -593,6 +607,12 @@ while running:
                 player.inventory[chest.loot_name.type] += chest.loot_num
                 gamemap.map[int(player.y)][int(player.x)] = '?'
                 del chest
+            if event.key == pygame.K_2:
+                player.active_weapon = 2
+            if event.key == pygame.K_1:
+                player.active_weapon = 1
+            if event.key == pygame.K_f:
+                player.hit()
             set_direction_uldr(player, event)
 
         if event.type == pygame.KEYUP or event.type == pygame.KEYDOWN and \
