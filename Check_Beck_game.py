@@ -301,7 +301,7 @@ class Bat(pygame.sprite.Sprite):
             self.coords[1] += self.direction[2] * 0.5
             self.i += 1
             if self.i == 4:
-                self.direction = change_monster_direction(self.direction)
+                self.direction = self.change_direction(self.direction)
                 self.i = 0
             if gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?':
                 self.rage = True
@@ -312,6 +312,13 @@ class Bat(pygame.sprite.Sprite):
             if int(self.coords[0]) == self.way[self.i][0]:
                 self.rect = self.rect.move(0, (self.coords[1] - (self.coords[1] - self.way[self.i]) * 25))
                 self.coords[1] += (self.coords[1] - (self.coords[1] - self.way[self.i][1])) * 0.5
+
+    def change_direction(self, old_dir):
+        possible_dir = [('down', 0, 1), ('right', 1, 0), ('up', 0, -1), ('left', -1, 0)]
+        new_dir = possible_dir.index(old_dir) + 1
+        new_dir = possible_dir[new_dir if new_dir != len(possible_dir) else 0]
+        self.image = load_image('bat_' + new_dir[0] + '.png')
+        return new_dir
 
 
 class Dragon(pygame.sprite.Sprite):
@@ -335,7 +342,7 @@ class Dragon(pygame.sprite.Sprite):
             self.coords[1] += self.direction[2] * 0.5
             self.i += 1
             if self.i == 4:
-                self.direction = change_monster_direction(self.direction)
+                self.direction = self.change_direction(self.direction)
                 self.i = 0
             if gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?':
                 self.rage = True
@@ -348,10 +355,18 @@ class Dragon(pygame.sprite.Sprite):
                 self.coords[1] += (self.coords[1] - (self.coords[1] - self.way[self.i][1])) * 0.5
 
 
+    def change_direction(self, old_dir):
+        possible_dir = [('down', 0, 1), ('right', 1, 0), ('up', 0, -1), ('left', -1, 0)]
+        new_dir = possible_dir.index(old_dir) + 1
+        new_dir = possible_dir[new_dir if new_dir != len(possible_dir) else 0]
+        self.image = load_image('dragon_' + new_dir[0] + '.png')
+        return new_dir
+
+
 class SkeletonBomber(pygame.sprite.Sprite):
     def __init__(self, coords, chest_coords):
         super().__init__(all_sprites, monsters_group)
-        self.image = load_image('SkeletonBomber_down.png')
+        self.image = load_image('skeleton_down.png')
         self.CHEST_COORDS = chest_coords
         self.HP = 50
         self.DAMAGE = None
@@ -369,7 +384,7 @@ class SkeletonBomber(pygame.sprite.Sprite):
             self.coords[1] += self.direction[2] * 0.5
             self.i += 1
             if self.i == 4:
-                self.direction = change_monster_direction(self.direction)
+                self.direction = self.change_direction(self.direction)
                 self.i = 0
             if gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?':
                 self.rage = True
@@ -380,6 +395,14 @@ class SkeletonBomber(pygame.sprite.Sprite):
             if int(self.coords[0]) == self.way[self.i][0]:
                 self.rect = self.rect.move(0, (self.coords[1] - (self.coords[1] - self.way[self.i]) * 25))
                 self.coords[1] += (self.coords[1] - (self.coords[1] - self.way[self.i][1])) * 0.5
+
+
+    def change_direction(self, old_dir):
+        possible_dir = [('down', 0, 1), ('right', 1, 0), ('up', 0, -1), ('left', -1, 0)]
+        new_dir = possible_dir.index(old_dir) + 1
+        new_dir = possible_dir[new_dir if new_dir != len(possible_dir) else 0]
+        self.image = load_image('skeleton_' + new_dir[0] + '.png')
+        return new_dir
 
 
 class Frankenstein(pygame.sprite.Sprite):
@@ -403,11 +426,11 @@ class Frankenstein(pygame.sprite.Sprite):
             self.coords[1] += self.direction[2] * 0.5
             self.i += 1
             if self.i == 4:
-                self.direction = change_monster_direction(self.direction)
+                self.direction = self.change_direction(self.direction)
                 self.i = 0
-            if gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?':
-                self.rage = True
-                self.i = 0
+                if gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?':
+                    self.rage = True
+                    self.i = 0
         elif self.rage:
             if int(self.coords[0]) != self.way[self.i][0]:
                 self.rect = self.rect.move((self.coords[0] - (self.coords[0] - self.way[self.i][0])) * 25, 0)
@@ -415,6 +438,14 @@ class Frankenstein(pygame.sprite.Sprite):
             if int(self.coords[1]) != self.way[self.i][1]:
                 self.rect = self.rect.move(0, (self.coords[1] - (self.coords[1] - self.way[self.i]) * 25))
                 self.coords[1] += self.coords[1] - (self.coords[1] - self.way[self.i][1])
+
+
+    def change_direction(self, old_dir):
+        possible_dir = [('down', 0, 1), ('right', 1, 0), ('up', 0, -1), ('left', -1, 0)]
+        new_dir = possible_dir.index(old_dir) + 1
+        new_dir = possible_dir[new_dir if new_dir != len(possible_dir) else 0]
+        self.image = load_image('frankenstein_' + new_dir[0] + '.png')
+        return new_dir
 
 
 class Potion(pygame.sprite.Sprite):
