@@ -291,6 +291,7 @@ class Bat(pygame.sprite.Sprite):
         self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
         self.direction = ('down', 0, 1)
         self.rage = False
+        self.way = [self.CHEST_COORDS]
         self.i = 0
 
     def update(self, direction):
@@ -300,13 +301,17 @@ class Bat(pygame.sprite.Sprite):
             self.coords[1] += self.direction[2] * 0.5
             self.i += 1
             if self.i == 4:
-                self.direction = self.change_direction(self.direction)
+                self.direction = change_monster_direction(self.direction)
                 self.i = 0
-
-    def change_direction(self, old_dir):
-        possible_dir = [('down', 0, 1), ('right', 1, 0), ('up', 0, -1), ('left', -1, 0)]
-        new_dir = possible_dir.index(old_dir) + 1
-        return possible_dir[new_dir if new_dir != len(possible_dir) else 0]
+            if gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?':
+                self.rage = True
+                self.i = 0
+        elif self.rage:
+            self.rect = self.rect.move((self.coords[0] - (self.coords[0] - self.way[self.i][0])) * 25, 0)
+            self.coords[0] += (self.coords[0] - (self.coords[0] - self.way[self.i][0])) * 0.5
+            if int(self.coords[0]) == self.way[self.i][0]:
+                self.rect = self.rect.move(0, (self.coords[1] - (self.coords[1] - self.way[self.i]) * 25))
+                self.coords[1] += (self.coords[1] - (self.coords[1] - self.way[self.i][1])) * 0.5
 
 
 class Dragon(pygame.sprite.Sprite):
@@ -320,6 +325,7 @@ class Dragon(pygame.sprite.Sprite):
         self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
         self.direction = ('down', 0, 1)
         self.rage = False
+        self.way = [self.CHEST_COORDS]
         self.i = 0
 
     def update(self, direction):
@@ -329,13 +335,17 @@ class Dragon(pygame.sprite.Sprite):
             self.coords[1] += self.direction[2] * 0.5
             self.i += 1
             if self.i == 4:
-                self.direction = self.change_direction(self.direction)
+                self.direction = change_monster_direction(self.direction)
                 self.i = 0
-
-    def change_direction(self, old_dir):
-        possible_dir = [('down', 0, 1), ('right', 1, 0), ('up', 0, -1), ('left', -1, 0)]
-        new_dir = possible_dir.index(old_dir) + 1
-        return possible_dir[new_dir if new_dir != len(possible_dir) else 0]
+            if gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?':
+                self.rage = True
+                self.i = 0
+        elif self.rage:
+            self.rect = self.rect.move((self.coords[0] - (self.coords[0] - self.way[self.i][0])) * 25, 0)
+            self.coords[0] += (self.coords[0] - (self.coords[0] - self.way[self.i][0])) * 0.5
+            if int(self.coords[0]) == self.way[self.i][0]:
+                self.rect = self.rect.move(0, (self.coords[1] - (self.coords[1] - self.way[self.i]) * 25))
+                self.coords[1] += (self.coords[1] - (self.coords[1] - self.way[self.i][1])) * 0.5
 
 
 class SkeletonBomber(pygame.sprite.Sprite):
@@ -348,6 +358,7 @@ class SkeletonBomber(pygame.sprite.Sprite):
         self.coords = coords
         self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
         self.direction = ('down', 0, 1)
+        self.way = [self.CHEST_COORDS]
         self.rage = False
         self.i = 0
 
@@ -358,13 +369,17 @@ class SkeletonBomber(pygame.sprite.Sprite):
             self.coords[1] += self.direction[2] * 0.5
             self.i += 1
             if self.i == 4:
-                self.direction = self.change_direction(self.direction)
+                self.direction = change_monster_direction(self.direction)
                 self.i = 0
-
-    def change_direction(self, old_dir):
-        possible_dir = [('down', 0, 1), ('right', 1, 0), ('up', 0, -1), ('left', -1, 0)]
-        new_dir = possible_dir.index(old_dir) + 1
-        return possible_dir[new_dir if new_dir != len(possible_dir) else 0]
+            if gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?':
+                self.rage = True
+                self.i = 0
+        elif self.rage:
+            self.rect = self.rect.move((self.coords[0] - (self.coords[0] - self.way[self.i][0])) * 25, 0)
+            self.coords[0] += (self.coords[0] - (self.coords[0] - self.way[self.i][0])) * 0.5
+            if int(self.coords[0]) == self.way[self.i][0]:
+                self.rect = self.rect.move(0, (self.coords[1] - (self.coords[1] - self.way[self.i]) * 25))
+                self.coords[1] += (self.coords[1] - (self.coords[1] - self.way[self.i][1])) * 0.5
 
 
 class Frankenstein(pygame.sprite.Sprite):
@@ -378,6 +393,7 @@ class Frankenstein(pygame.sprite.Sprite):
         self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
         self.direction = ('down', 0, 1)
         self.rage = False
+        self.way = [self.CHEST_COORDS]
         self.i = 0
 
     def update(self, direction):
@@ -387,13 +403,18 @@ class Frankenstein(pygame.sprite.Sprite):
             self.coords[1] += self.direction[2] * 0.5
             self.i += 1
             if self.i == 4:
-                self.direction = self.change_direction(self.direction)
+                self.direction = change_monster_direction(self.direction)
                 self.i = 0
-
-    def change_direction(self, old_dir):
-        possible_dir = [('down', 0, 1), ('right', 1, 0), ('up', 0, -1), ('left', -1, 0)]
-        new_dir = possible_dir.index(old_dir) + 1
-        return possible_dir[new_dir if new_dir != len(possible_dir) else 0]
+            if gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?':
+                self.rage = True
+                self.i = 0
+        elif self.rage:
+            if int(self.coords[0]) != self.way[self.i][0]:
+                self.rect = self.rect.move((self.coords[0] - (self.coords[0] - self.way[self.i][0])) * 25, 0)
+                self.coords[0] += self.coords[0] - (self.coords[0] - self.way[self.i][0])
+            if int(self.coords[1]) != self.way[self.i][1]:
+                self.rect = self.rect.move(0, (self.coords[1] - (self.coords[1] - self.way[self.i]) * 25))
+                self.coords[1] += self.coords[1] - (self.coords[1] - self.way[self.i][1])
 
 
 class Potion(pygame.sprite.Sprite):
