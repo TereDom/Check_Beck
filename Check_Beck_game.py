@@ -3,6 +3,8 @@ import os
 import random
 
 pygame.init()
+weapons_group = pygame.sprite.Group()
+chest_group = pygame.sprite.Group()
 inventory_sprites = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
@@ -65,7 +67,6 @@ class Inventory:
                                                              height * 0.012,
                                                              (int(self.width * 0.88) - 2) / HP * player.hp,
                                                              height * 0.07 - 2))
-        inventory_sprites.draw(screen)
 
     def draw_slots(self):
         size_of_slots = 55
@@ -100,19 +101,40 @@ class Inventory:
         pygame.draw.rect(screen, (255, 255, 255), (self.x + ((self.width - size_of_map) // 2),
                                                    height * 0.62, size_of_map, size_of_map), 1)
 
+    def draw_numbers(self):
+        shift_for_once = 45
+        shift_for_twice = 38
+        vertical_shift = 46
+        for sprite in chest_group:
+            if player.inventory[sprite.type] != 0:
+                font = pygame.font.Font(None, 20)
+                text = font.render((str(player.inventory[sprite.type])), 1, (100, 255, 100))
+                if len(str(player.inventory[sprite.type])) == 1:
+                    text_x = sprite.rect[0] + shift_for_once
+                elif len(str(player.inventory[sprite.type])) == 2:
+                    text_x = sprite.rect[0] + shift_for_twice
+                text_y = sprite.rect[1] + vertical_shift
+                screen.blit(text, (text_x, text_y))
+
     def upgrade(self):
         self.draw_health_bar()
         self.draw_slots()
-        inventory_sprites.draw(screen)
+        self.draw_numbers()
+        weapons_group.draw(screen)
+        draw_sprites = pygame.sprite.Group()
+        for sprite in chest_group:
+            if player.inventory[sprite.type] != 0:
+                draw_sprites.add(sprite)
+        draw_sprites.draw(screen)
+
+
+
 
 
 
 def set_direction_wasd(event):
     direction = None
     move = True
-def set_direction_wasd(event):
-    move = True
-    direction = None
     if event.key == pygame.K_w:
         direction = 'up'
     elif event.key == pygame.K_s:
@@ -128,43 +150,25 @@ def set_direction_wasd(event):
         move = True
         if keys[pygame.K_w]:
             direction = "up"
-            move = True
         elif keys[pygame.K_s]:
             direction = 'down'
-            move = True
         elif keys[pygame.K_a]:
             direction = 'left'
-            move = True
         elif keys[pygame.K_d]:
             direction = 'right'
-            move = True
         else:
-            direction = None
             move = False
     return direction, move
 
 
-def set_direction_uldr(player, event):
-    direction = player.direction
-    if event.key == pygame.K_UP:
-        direction = 'up'
-    if event.key == pygame.K_DOWN:
-        direction = 'down'
-    if event.key == pygame.K_LEFT:
-        direction = 'left'
-    if event.key == pygame.K_RIGHT:
-        direction = 'right'
-    player.update_direction(direction)
-
-
-def set_direction_ls(joistick):
+def set_direction_j_ls(joistick):
     axis0 = joistick.get_axis(0)
     axis1 = joistick.get_axis(1)
     axis0 = 0 if -0.1 <= axis0 <= 0.1 else axis0
     axis1 = 0 if -0.1 <= axis1 <= 0.1 else axis1
 
-    move = True
     direction = None
+    move = True
     if abs(axis0) > abs(axis1):
         if axis0 >= 0.1:
             direction = 'right'
@@ -180,32 +184,10 @@ def set_direction_ls(joistick):
     return direction, move
 
 
-def set_direction_rs(player, joistick):
-    axis4 = joistick.get_axis(4)
-    axis3 = joistick.get_axis(3)
-    axis4 = 0 if -0.1 <= axis4 <= 0.1 else axis4
-    axis3 = 0 if -0.1 <= axis3 <= 0.1 else axis3
-
-    direction = player.direction
-    if abs(axis4) > abs(axis3):
-        if axis4 >= 0.1:
-            direction = 'right'
-        elif axis4 <= -0.1:
-            direction = 'left'
-    elif abs(axis4) < abs(axis3):
-        if axis3 >= 0.1:
-            direction = 'down'
-        elif axis3 <= -0.1:
-            direction = 'up'
-    print(direction)
-
-    player.update_direction(direction)
-
-
-def set_direction_hat(event):
-    flag = False
-    move = True
+def set_direction_j_hat(event):
     direction = None
+    move = True
+    flag = False
     if event.value == (0, 1):
         direction = 'up'
     elif event.value == (0, -1):
@@ -218,6 +200,7 @@ def set_direction_hat(event):
         move = False
         flag = True
     return direction, move, flag
+
 
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
@@ -256,8 +239,8 @@ class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y, map):
         super().__init__(all_sprites)
         self.image = player_image
-        self.inventory = dict()
-        self.weapons = list()
+        self.inventory = {'Ammo': 0, 'Potion': 0, 'Key': 0}
+        self.weapons = []
         self.x, self.y = pos_x, pos_y
         self.image = load_image('Player_down.png')
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
@@ -346,9 +329,10 @@ class Frankenstein(Creatures):
 
 class Potion(pygame.sprite.Sprite):
     def __init__(self):
-        super().__init__(inventory_sprites)
+        super().__init__(inventory_sprites, chest_group)
+        self.type = 'Potion'
         self.image = load_image('potion.png')
-        self.rect = (inventory.x + ((inventory.width - int(inventory.width * 0.88)) // 2), height * 0.31)
+        self.rect = (inventory.x + ((inventory.width - int(inventory.width * 0.88)) // 2), height * 0.30)
 
     def update(self):
         pass
@@ -356,10 +340,11 @@ class Potion(pygame.sprite.Sprite):
 
 class Key(pygame.sprite.Sprite):
     def __init__(self):
-        super().__init__(inventory_sprites)
+        super().__init__(inventory_sprites, chest_group)
+        self.type = 'Key'
         self.image = load_image('key.png')
         self.rect = (inventory.x + ((inventory.width - int(inventory.width * 0.88)) // 2)
-                                                   + int(inventory.width * 0.88) - 55, height * 0.31)
+                                                   + int(inventory.width * 0.88) - 55, height * 0.30)
 
     def update(self):
         pass
@@ -367,12 +352,30 @@ class Key(pygame.sprite.Sprite):
 
 class Ammo(pygame.sprite.Sprite):
     def __init__(self):
-        super().__init__(inventory_sprites)
+        super().__init__(inventory_sprites, chest_group)
+        self.type = 'Ammo'
         self.image = load_image('ammo.png')
-        self.rect = (inventory.x + ((inventory.width - int(inventory.width * 0.88)) // 2), height * 0.48)
+        self.rect = (inventory.x + ((inventory.width - int(inventory.width * 0.88)) // 2), height * 0.47)
 
     def update(self):
         pass
+
+
+class FirstWeapon(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(inventory_sprites, weapons_group)
+        self.image = load_image('gun.png')
+        self.rect = (inventory.x + ((inventory.width - int(inventory.width * 0.88)) // 2)
+                                                   + (int(inventory.width * 0.88) - 55 * 2) // 4, height * 0.14)
+
+
+class SecondWeapon(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(inventory_sprites, weapons_group)
+        self.image = load_image('knife.png')
+        self.rect = (inventory.x + ((inventory.width - int(inventory.width * 0.88)) // 2)
+                                                   + int(inventory.width * 0.88) - (int(inventory.width * 0.88)
+                                                                               - 55 * 2) // 4 - 55, height * 0.14)
 
 inventory = Inventory(width, height)
 CHEST_LOOT = [Potion(), Ammo(), Key()]
@@ -405,57 +408,7 @@ class Chest(pygame.sprite.Sprite):
         chests_found += 1
 
 
-class FirstWeapon(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__(inventory_sprites)
-        self.image = load_image('gun.png')
-        self.rect = (680, 70)
 
-
-class SecondWeapon(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__(inventory_sprites)
-        self.image = load_image('knife.png')
-        self.rect = (765, 70)
-
-
-class Potion(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__(inventory_sprites)
-        self.image = load_image('')
-        self.rect = (x, y)
-
-    def update(self):
-        pass
-
-
-class Key(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__(inventory_sprites)
-        self.image = load_image('')
-        self.rect = (x, y)
-
-    def update(self):
-        pass
-        pygame.mixer.music.play(1)
-        chests_found += 1
-
-
-class FirstWeapon(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__(inventory_sprites)
-        self.image = load_image('gun.png')
-        self.rect = (680, 70)
-
-
-class SecondWeapon(pygame.sprite.Sprite):
-    def __init__(self):
-        super().__init__(inventory_sprites)
-        self.image = load_image('knife.png')
-        self.rect = (inventory.x + ((inventory.width - int(inventory.width * 0.88)) // 2)
-                                                   + int(inventory.width * 0.88) - (int(inventory.width * 0.88)
-                                                                               - 55 * 2) // 4
-                                                   - 55, height * 0.14)
 
 
 player_image = load_image('Player_down.png')
@@ -485,50 +438,28 @@ while running:
         if event.type == pygame.QUIT:
             running = False
         if event.type == pygame.JOYHATMOTION:
-            direction, move, flag = set_direction_j_hat(event, direction, move)
+            direction, move, flag = set_direction_j_hat(event)
         if event.type == pygame.JOYBUTTONDOWN:
             if event.button == 7:
                 running = False
             if event.button == 0 and player.map[int(player.y)][int(player.x)] == '!':
                 chest = chests[(int(player.y), int(player.x))]
                 chest.open_chest()
-                if chest.loot_name in player.inventory.keys():
-                    player.inventory[chest.loot_name] += chest.loot_num
-                else:
-                    player.inventory[chest.loot_name] = chest.loot_num
-                player.map[int(player.y)][int(player.x)] = '?'
-                player.map[int(player.y)][int(player.x)] = '?'
-                del chests[(int(player.y), int(player.x))]
-        if event.type == pygame.JOYBUTTONDOWN:
-            if event.button == 7:
-                running = False
-            if event.button == 0 and player.map[int(player.y)][int(player.x)] == '!':
-                chest = chests[(int(player.y), int(player.x))]
-                chest.open_chest()
-                if chest.loot_name in player.inventory.keys():
-                    player.inventory[chest.loot_name] += chest.loot_num
-                else:
-                    player.inventory[chest.loot_name] = chest.loot_num
-                player.map[int(player.y)][int(player.x)] = '?'
+                player.inventory[chest.loot_name.type] += chest.loot_num
                 player.map[int(player.y)][int(player.x)] = '?'
                 del chests[(int(player.y), int(player.x))]
         if event.type == pygame.KEYDOWN:
             if player.map[int(player.y)][int(player.x)] == '!' and event.key == pygame.K_e:
                 chest = chests[(int(player.y), int(player.x))]
                 chest.open_chest()
-                if chest.loot_name in player.inventory.keys():
-                    player.inventory[chest.loot_name] += chest.loot_num
-                else:
-                    player.inventory[chest.loot_name] = chest.loot_num
+                player.inventory[chest.loot_name.type] += chest.loot_num
+                print(player.inventory)
                 player.map[int(player.y)][int(player.x)] = '?'
                 del chest
-            direction, move = set_direction_k(event, direction, move)
-        if event.type == pygame.KEYUP:
-            move = False
-            direction = None
-
+        if event.type == pygame.KEYUP or event.type == pygame.KEYDOWN:
+            direction, move = set_direction_wasd(event)
     if stick is not None and flag:
-        direction, move = set_direction_j(stick, direction, move)
+        direction, move = set_direction_j_ls(stick)
 
     time += clock.tick()
     if move and time >= 150:
