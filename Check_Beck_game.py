@@ -87,22 +87,22 @@ class Inventory:
         pygame.draw.rect(screen, (255, 255, 255), (self.x + ((self.width - int(self.width * 0.88)) // 2),
                                                    height * 0.13, int(self.width * 0.88), height * 0.13), 1)
 
-        pygame.draw.rect(screen, (255, 255, 255) if player.active_weapon == 2 else (225, 204, 79),
+        pygame.draw.rect(screen, (255, 255, 255),
                          (self.x + ((self.width - int(self.width * 0.88)) // 2) +
-                          (int(self.width * 0.88) - size_of_slots * 2) // 4, height * 0.14,
-                          size_of_slots, size_of_slots), 1)
+                          (int(self.width * 0.88) - size_of_slots * 2) // 4 - 1, height * 0.14 - 1,
+                          size_of_slots + 2, size_of_slots + 2), 1)
 
-        pygame.draw.rect(screen, (255, 255, 255) if player.active_weapon == 1 else (225, 204, 79),
+        pygame.draw.rect(screen, (255, 255, 255),
                          (self.x + ((self.width - int(self.width * 0.88)) // 2) +
                           int(self.width * 0.88) - (int(self.width * 0.88) - size_of_slots * 2) // 4
-                          - size_of_slots, height * 0.14, size_of_slots, size_of_slots), 1)
+                          - size_of_slots - 1, height * 0.14 - 1, size_of_slots + 2, size_of_slots + 2), 1)
 
-        pygame.draw.rect(screen, (255, 255, 255), (self.x + ((self.width - int(self.width * 0.88)) // 2), height * 0.31,
-                                                   size_of_slots, size_of_slots), 1)
+        pygame.draw.rect(screen, (255, 255, 255), (self.x + ((self.width - int(self.width * 0.88)) // 2) - 1,
+                                                   height * 0.31 - 1, size_of_slots + 2, size_of_slots + 2), 1)
 
         pygame.draw.rect(screen, (255, 255, 255), (self.x + ((self.width - int(self.width * 0.88)) // 2)
-                                                   + int(self.width * 0.88) - size_of_slots, height * 0.31,
-                                                   size_of_slots, size_of_slots), 1)
+                                                   + int(self.width * 0.88) - size_of_slots - 1, height * 0.31 - 1,
+                                                   size_of_slots + 2, size_of_slots + 2), 1)
 
         pygame.draw.rect(screen, (255, 255, 255), (self.x + ((self.width - int(self.width * 0.88)) // 2),
                                                    height * 0.48, size_of_slots, size_of_slots), 1)
@@ -324,8 +324,8 @@ class Player(pygame.sprite.Sprite):
         elif direction == 'right':
             self.image = load_image('Player_right.png')
 
-    def hit(self):
-        if self.active_weapon == 1:
+    def hit(self, weapon):
+        if weapon == 1:
             if player.inventory['Ammo']:
                 pygame.mixer.music.load("data/shot.mp3")
                 pygame.mixer.music.play(1)
@@ -333,7 +333,7 @@ class Player(pygame.sprite.Sprite):
             elif not player.inventory['Ammo']:
                 pygame.mixer.music.load("data/noAmmo_shot.mp3")
                 pygame.mixer.music.play(1)
-        elif self.active_weapon == 2:
+        elif weapon == 2:
             pygame.mixer.music.load("data/hit.mp3")
             pygame.mixer.music.play(1)
 
@@ -600,6 +600,10 @@ while running:
                 player.inventory[chest.loot_name.type] += chest.loot_num
                 gamemap.map[int(player.y)][int(player.x)] = '?'
                 del chests[(int(player.y), int(player.x))]
+            if event.button == 2:
+                player.hit(1)
+            if event.button == 1:
+                player.hit(2)
         if event.type == pygame.KEYDOWN:
             if gamemap.map[int(player.y)][int(player.x)] == '!' and event.key == pygame.K_e:
                 chest = chests[(int(player.y), int(player.x))]
@@ -608,11 +612,9 @@ while running:
                 gamemap.map[int(player.y)][int(player.x)] = '?'
                 del chest
             if event.key == pygame.K_2:
-                player.active_weapon = 2
+                player.hit(2)
             if event.key == pygame.K_1:
-                player.active_weapon = 1
-            if event.key in [pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT]:
-                player.hit()
+                player.hit(1)
             set_direction_uldr(player, event)
 
         if event.type == pygame.KEYUP or event.type == pygame.KEYDOWN and \
