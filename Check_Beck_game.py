@@ -104,15 +104,14 @@ class Inventory:
     def draw_numbers(self):
         shift_for_once = 45
         shift_for_twice = 38
+        shift_for_thrice = 31
+        shifts = [shift_for_once, shift_for_twice, shift_for_thrice]
         vertical_shift = 46
         for sprite in chest_group:
             if player.inventory[sprite.type] != 0:
                 font = pygame.font.Font(None, 20)
                 text = font.render((str(player.inventory[sprite.type])), 1, (100, 255, 100))
-                if len(str(player.inventory[sprite.type])) == 1:
-                    text_x = sprite.rect[0] + shift_for_once
-                elif len(str(player.inventory[sprite.type])) == 2:
-                    text_x = sprite.rect[0] + shift_for_twice
+                text_x = sprite.rect[0] + shifts[len(str(player.inventory[sprite.type])) - 1]
                 text_y = sprite.rect[1] + vertical_shift
                 screen.blit(text, (text_x, text_y))
 
@@ -126,10 +125,6 @@ class Inventory:
             if player.inventory[sprite.type] != 0:
                 draw_sprites.add(sprite)
         draw_sprites.draw(screen)
-
-
-
-
 
 
 def set_direction_wasd(event):
