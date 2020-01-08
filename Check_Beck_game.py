@@ -306,7 +306,9 @@ class Bat(pygame.sprite.Sprite):
     def change_direction(self, old_dir):
         possible_dir = [('down', 0, 1), ('right', 1, 0), ('up', 0, -1), ('left', -1, 0)]
         new_dir = possible_dir.index(old_dir) + 1
-        return possible_dir[new_dir if new_dir != len(possible_dir) else 0]
+        new_dir = possible_dir[new_dir if new_dir != len(possible_dir) else 0]
+        self.image = load_image('bat_' + new_dir[0] + '.png')
+        return new_dir
 
 
 class Dragon(pygame.sprite.Sprite):
@@ -335,7 +337,9 @@ class Dragon(pygame.sprite.Sprite):
     def change_direction(self, old_dir):
         possible_dir = [('down', 0, 1), ('right', 1, 0), ('up', 0, -1), ('left', -1, 0)]
         new_dir = possible_dir.index(old_dir) + 1
-        return possible_dir[new_dir if new_dir != len(possible_dir) else 0]
+        new_dir = possible_dir[new_dir if new_dir != len(possible_dir) else 0]
+        self.image = load_image('dragon_' + new_dir[0] + '.png')
+        return new_dir
 
 
 class SkeletonBomber(pygame.sprite.Sprite):
@@ -364,7 +368,9 @@ class SkeletonBomber(pygame.sprite.Sprite):
     def change_direction(self, old_dir):
         possible_dir = [('down', 0, 1), ('right', 1, 0), ('up', 0, -1), ('left', -1, 0)]
         new_dir = possible_dir.index(old_dir) + 1
-        return possible_dir[new_dir if new_dir != len(possible_dir) else 0]
+        new_dir = possible_dir[new_dir if new_dir != len(possible_dir) else 0]
+        self.image = load_image('skeleton_' + new_dir[0] + '.png')
+        return new_dir
 
 
 class Frankenstein(pygame.sprite.Sprite):
@@ -393,7 +399,9 @@ class Frankenstein(pygame.sprite.Sprite):
     def change_direction(self, old_dir):
         possible_dir = [('down', 0, 1), ('right', 1, 0), ('up', 0, -1), ('left', -1, 0)]
         new_dir = possible_dir.index(old_dir) + 1
-        return possible_dir[new_dir if new_dir != len(possible_dir) else 0]
+        new_dir = possible_dir[new_dir if new_dir != len(possible_dir) else 0]
+        self.image = load_image('frankenstein_' + new_dir[0] + '.png')
+        return new_dir
 
 
 class Potion(pygame.sprite.Sprite):
