@@ -611,7 +611,7 @@ while running:
                 player.active_weapon = 2
             if event.key == pygame.K_1:
                 player.active_weapon = 1
-            if event.key == pygame.K_f:
+            if event.key in [pygame.K_UP, pygame.K_DOWN, pygame.K_LEFT, pygame.K_RIGHT]:
                 player.hit()
             set_direction_uldr(player, event)
 
