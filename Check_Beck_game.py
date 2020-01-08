@@ -575,8 +575,10 @@ while running:
             running = False
         if event.type == pygame.JOYHATMOTION:
             direction, move, flag = set_direction_hat(event)
+        if event.type == pygame.JOYAXISMOTION:
+            set_direction_rs(player, stick)
         if event.type == pygame.JOYBUTTONDOWN:
-            if event.button == 7:
+            if event.button in [7, 6]:
                 running = False
             if event.button == 0 and gamemap.map[int(player.y)][int(player.x)] == '!':
                 chest = chests[(int(player.y), int(player.x))]
@@ -592,7 +594,9 @@ while running:
                 gamemap.map[int(player.y)][int(player.x)] = '?'
                 del chest
             set_direction_uldr(player, event)
-        if event.type == pygame.KEYUP or event.type == pygame.KEYDOWN:
+
+        if event.type == pygame.KEYUP or event.type == pygame.KEYDOWN and \
+                event.key in [pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d]:
             direction, move = set_direction_wasd(event)
 
     if stick is not None and flag:
