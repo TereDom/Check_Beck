@@ -282,8 +282,6 @@ class Player(pygame.sprite.Sprite):
         self.x, self.y = pos_x, pos_y
         self.image = load_image('Player_down.png')
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
-        self.map = map
-        self.map = [list(i) for i in self.map]
         self.hp = HP
         self.direction = 'down'
 
@@ -618,11 +616,9 @@ while running:
 
     gamemap.render()
     all_sprites.draw(screen)
-    inventory.upgrade()
-    monsters_group.draw(screen)
 
-    upgrade_inventory()
-    inventory_sprites.draw(screen)
+    monsters_group.draw(screen)
+    inventory.upgrade()
     pygame.display.flip()
 
 if stick is not None:
