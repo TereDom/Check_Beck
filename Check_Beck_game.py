@@ -341,7 +341,7 @@ class Dragon(pygame.sprite.Sprite):
 class SkeletonBomber(pygame.sprite.Sprite):
     def __init__(self, coords, chest_coords):
         super().__init__(all_sprites, monsters_group)
-        self.image = load_image('SkeletonBomber_down.png')
+        self.image = load_image('skeleton_down.png')
         self.CHEST_COORDS = chest_coords
         self.HP = 50
         self.DAMAGE = None
