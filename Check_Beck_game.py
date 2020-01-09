@@ -87,12 +87,12 @@ class Inventory:
         pygame.draw.rect(screen, (255, 255, 255), (self.x + ((self.width - int(self.width * 0.88)) // 2),
                                                    height * 0.13, int(self.width * 0.88), height * 0.13), 1)
 
-        pygame.draw.rect(screen, (255, 255, 255),
+        pygame.draw.rect(screen, (255, 255, 255) if player.active_weapon == 2 else (225, 204, 79),
                          (self.x + ((self.width - int(self.width * 0.88)) // 2) +
                           (int(self.width * 0.88) - size_of_slots * 2) // 4 - 1, height * 0.14 - 1,
                           size_of_slots + 2, size_of_slots + 2), 1)
 
-        pygame.draw.rect(screen, (255, 255, 255),
+        pygame.draw.rect(screen, (255, 255, 255) if player.active_weapon == 1 else (225, 204, 79),
                          (self.x + ((self.width - int(self.width * 0.88)) // 2) +
                           int(self.width * 0.88) - (int(self.width * 0.88) - size_of_slots * 2) // 4
                           - size_of_slots - 1, height * 0.14 - 1, size_of_slots + 2, size_of_slots + 2), 1)
@@ -167,19 +167,6 @@ def set_direction_wasd(event):
         else:
             move = False
     return direction, move
-
-
-def set_direction_uldr(player, event):
-    direction = player.direction
-    if event.key == pygame.K_UP:
-        direction = 'up'
-    if event.key == pygame.K_DOWN:
-        direction = 'down'
-    if event.key == pygame.K_LEFT:
-        direction = 'left'
-    if event.key == pygame.K_RIGHT:
-        direction = 'right'
-    player.update_direction(direction)
 
 
 def set_direction_ls(joistick):
@@ -324,8 +311,8 @@ class Player(pygame.sprite.Sprite):
         elif direction == 'right':
             self.image = load_image('Player_right.png')
 
-    def hit(self, weapon):
-        if weapon == 1:
+    def hit(self):
+        if self.active_weapon == 1:
             if player.inventory['Ammo']:
                 pygame.mixer.music.load("data/shot.mp3")
                 pygame.mixer.music.play(1)
@@ -333,7 +320,7 @@ class Player(pygame.sprite.Sprite):
             elif not player.inventory['Ammo']:
                 pygame.mixer.music.load("data/noAmmo_shot.mp3")
                 pygame.mixer.music.play(1)
-        elif weapon == 2:
+        elif self.active_weapon == 2:
             pygame.mixer.music.load("data/hit.mp3")
             pygame.mixer.music.play(1)
 
@@ -612,12 +599,15 @@ while running:
                 gamemap.map[int(player.y)][int(player.x)] = '?'
                 del chest
             if event.key == pygame.K_2:
-                player.hit(2)
+                player.active_weapon = 2
             if event.key == pygame.K_1:
-                player.hit(1)
-            set_direction_uldr(player, event)
+                player.active_weapon = 1
+            if event.key == pygame.K_SPACE:
+                player.hit()
+            if event.key == pygame.K_ESCAPE:
+                running = False
 
-        if event.type == pygame.KEYUP or event.type == pygame.KEYDOWN and \
+        if (event.type == pygame.KEYUP or event.type == pygame.KEYDOWN) and \
                 event.key in [pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d]:
             direction, move = set_direction_wasd(event)
 
@@ -633,7 +623,10 @@ while running:
         monster_timer = 0
 
     if move and player_timer >= 150:
-        player.update(direction)
+        if player.direction != direction:
+            player.update_direction(direction)
+        else:
+            player.update(direction)
         player_timer = 0
 
     camera.update(player)
