@@ -8,6 +8,8 @@ chest_group = pygame.sprite.Group()
 inventory_sprites = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
+dark_zones = dict()
+dark_group = pygame.sprite.Group()
 monsters_group = pygame.sprite.Group()
 LIST_OF_MONSTERS = ['Bat', 'Dragon', 'SkeletonBomber', 'Frankenstein']
 size = width, height = 850, 500
@@ -33,6 +35,7 @@ def load_level(filename):
 
 def generate_level(level):
     new_player, x, y, chests, monsters = None, None, None, dict(), dict()
+
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == '.':
@@ -42,15 +45,22 @@ def generate_level(level):
             elif level[y][x] == '!':
                 Tile("empty", x, y)
                 chests[(y, x)] = Chest((x, y))
-                monsters[(y - 1, x - 1)] = random_monster(random.choices(LIST_OF_MONSTERS)[0],
-                                                          [x - 1, y - 1], (x, y))
+                monsters[(y - 1, x - 1)] = random_monster(random.choices(LIST_OF_MONSTERS)[0], [x - 1, y - 1], (x, y))
             elif level[y][x] == '@':
                 Tile('empty', x, y)
+                player_coords = x, y
             elif level[y][x] == '*':
                 Tile('door', x, y)
+
+    p_x, p_y = player_coords
+    for y in range(len(level)):
+        for x in range(len(level[0])):
+            if (x, y) not in [(p_x, p_y), (p_x + 1, p_y), (p_x - 1, p_y), (p_x, p_y + 1), (p_x, p_y - 1)]:
+                dark_zones[(x, y)] = Tile('dark', x, y)
+
     gun = FirstWeapon()
     knife = SecondWeapon()
-    new_player = Player(3, 3)
+    new_player = Player(*player_coords)
     gamemap = GameMap(98, 98, load_level('map.txt'))
     return gamemap, new_player, x, y, chests, gun, knife, monsters
 
@@ -233,9 +243,9 @@ def set_direction_hat(event):
 
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
-        tile_images = {'wall': load_image('wall.png'),
+        tile_images = {'wall': load_image('wall.png'), 'dark': load_image('dark.png'),
                        'empty': load_image('floor.png'), 'door': load_image('door.png')}
-        super().__init__(tiles_group, all_sprites)
+        super().__init__((all_sprites, tiles_group) if tile_type != 'dark' else dark_group)
         self.image = tile_images[tile_type]
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
 
@@ -299,6 +309,11 @@ class Player(pygame.sprite.Sprite):
             self.x -= 0.5
             self.image = load_image('Player_left.png')
             self.direction = 'left'
+        x, y = int(self.x), int(self.y)
+        for i in [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]:
+            if i in dark_zones.keys():
+                dark_zones[i].kill()
+                del dark_zones[i]
 
     def update_direction(self, direction):
         self.direction = direction
@@ -632,11 +647,14 @@ while running:
     camera.update(player)
     for sprite in all_sprites:
         camera.apply(sprite)
+    for sprite in dark_group:
+        camera.apply(sprite)
 
     gamemap.render()
     all_sprites.draw(screen)
-
     monsters_group.draw(screen)
+    dark_group.draw(screen)
+
     inventory.upgrade()
     pygame.display.flip()
 
