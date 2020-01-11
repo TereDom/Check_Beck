@@ -108,6 +108,7 @@ class Inventory:
     def __init__(self, width, height):
         self.x = width * 0.76
         self.width = width - self.x
+        self.minimap_coords = self.x + ((self.width - 194) // 2), height * 0.6
 
     def draw_health_bar(self):
         screen.fill((51, 20, 20), pygame.Rect(self.x, 0, width, height))
@@ -121,7 +122,7 @@ class Inventory:
 
     def draw_slots(self):
         size_of_slots = 55
-        size_of_map = 180
+        size_of_map = 194
         pygame.draw.rect(screen, (255, 255, 255), (self.x + ((self.width - int(self.width * 0.88)) // 2),
                                                    height * 0.13, int(self.width * 0.88), height * 0.13), 1)
 
@@ -150,7 +151,11 @@ class Inventory:
                                                    height * 0.48, size_of_slots, size_of_slots), 1)
 
         pygame.draw.rect(screen, (255, 255, 255), (self.x + ((self.width - size_of_map) // 2),
-                                                   height * 0.62, size_of_map, size_of_map), 1)
+                                                   height * 0.6, size_of_map, size_of_map), 1)
+
+
+    def get_minimap_coords(self):
+        return self.minimap_coords
 
     def draw_numbers(self):
         shift_for_once = 45
@@ -348,6 +353,9 @@ class Player(pygame.sprite.Sprite):
             if i in dark_zones.keys():
                 dark_zones[i].kill()
                 del dark_zones[i]
+
+        minimap.update_player_coords(int(self.x), int(self.y))
+        minimap.draw()
 
     def update_direction(self, direction):
         self.direction = direction
@@ -575,6 +583,48 @@ CHEST_LOOT = [Potion(), Ammo(), Key()]
 LOOTS_WEIGHTS = [30, 30, 10]
 
 
+class MiniMap:
+    def __init__(self, w, h, coords, cell_size, player_coords):
+        self.map = [[None for _ in range(w)] for _ in range(h)]
+        self.x, self.y = coords
+        self.cell_size = cell_size
+        self.p_x, self.p_y = player_coords
+        self.map[97][95] = 0
+
+    def open_cell(self, x, y):
+        self.map[y][x] = 1
+
+    def update_player_coords(self, x, y):
+        self.map[self.p_y][self.p_x] = 1
+        self.map[y][x] = -1
+        self.p_x, self.p_y = x, y
+
+    def draw(self):
+        for y in range(len(self.map)):
+            for x in range(len(self.map[0])):
+                if self.map[y][x] == -1:
+                    pygame.draw.rect(
+                        screen, pygame.color.Color('yellow'), (self.x + x * self.cell_size,
+                                                               self.y + y * self.cell_size,
+                                                               self.cell_size, self.cell_size), 0)
+                elif self.map[y][x] == 0:
+                    pygame.draw.rect(
+                        screen, pygame.color.Color('blue'), (self.x + x * self.cell_size,
+                                                             self.y + y * self.cell_size,
+                                                             self.cell_size, self.cell_size), 0)
+                elif self.map[y][x] is not None:
+                    pygame.draw.rect(
+                        screen, pygame.color.Color('red'), (self.x + x * self.cell_size,
+                                                            self.y + y * self.cell_size,
+                                                            self.cell_size, self.cell_size), 0)
+                else:
+                    pygame.draw.rect(
+                        screen, pygame.color.Color('black'), (self.x + x * self.cell_size,
+                                                            self.y + y * self.cell_size,
+                                                            self.cell_size, self.cell_size), 0)
+
+
+
 class Chest(pygame.sprite.Sprite):
     def __init__(self, coords):
         super().__init__(all_sprites)
@@ -607,6 +657,8 @@ class Chest(pygame.sprite.Sprite):
 
 player_image = load_image('Player_down.png')
 gamemap, player, level_x, level_y, chests, gun, knife, monsters = generate_level(load_level('map.txt'))
+
+minimap = MiniMap(len(gamemap.map), len(gamemap.map[0]), inventory.get_minimap_coords(), 2, (player.x, player.y))
 
 if pygame.joystick.get_count():
     stick = pygame.joystick.Joystick(0)
@@ -703,6 +755,7 @@ while running:
     dark_group.draw(screen)
 
     inventory.upgrade()
+    minimap.draw()
     pygame.display.flip()
 
 if stick is not None:
