@@ -1,6 +1,7 @@
 import pygame
 import os
 import random
+import sys
 
 pygame.init()
 weapons_group = pygame.sprite.Group()
@@ -18,6 +19,21 @@ tile_width = tile_height = 50
 HP = 50
 HEALTH_BAR_SIZE = 178
 chests_found = 0
+amount_sprites = 47996
+
+
+def show_progress(setMax, setVal):
+    # Всего процентов
+    precent_max = setMax
+    # Текущее количество процентов
+    precent_cur = int(setVal / setMax * 100)
+    # Это 100% прогресс бара
+    length_pb = 60
+    # Вычислить текущее значение прогресса
+    length_cur = int(length_pb / 100 * precent_cur)
+    # Выводим прогресс бар
+    sys.stderr.write(
+        '\rProgress: [' + '#' * length_cur + '.' * (length_pb - length_cur) + '] ' + str(precent_cur) + '%')
 
 
 def load_image(name, colorkey=None):
@@ -36,6 +52,8 @@ def load_level(filename):
 def generate_level(level):
     new_player, x, y, chests, monsters = None, None, None, dict(), dict()
 
+    load_val = 0
+
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == '.':
@@ -51,12 +69,22 @@ def generate_level(level):
                 player_coords = x, y
             elif level[y][x] == '*':
                 Tile('door', x, y)
+            load_val += 1
+            show_progress(amount_sprites, load_val)
 
     p_x, p_y = player_coords
-    for y in range(len(level)):
-        for x in range(len(level[0])):
-            if (x, y) not in [(p_x, p_y), (p_x + 1, p_y), (p_x - 1, p_y), (p_x, p_y + 1), (p_x, p_y - 1)]:
+    p_x, p_y = p_x * 2, p_y * 2
+    for y in range(len(level) * 2):
+        for x in range(len(level[0]) * 2):
+            if (x, y) not in [(p_x, p_y - 1), (p_x, p_y - 2), (p_x, p_y + 2), (p_x, p_y + 3),
+                              (p_x + 1, p_y - 1), (p_x + 1, p_y - 2), (p_x + 1, p_y + 2), (p_x + 1, p_y + 3),
+                              (p_x - 2, p_y), (p_x - 1, p_y), (p_x + 2, p_y), (p_x + 3, p_y),
+                              (p_x - 2, p_y + 1), (p_x - 1, p_y + 1), (p_x + 2, p_y + 1), (p_x + 3, p_y + 1),
+                              (p_x - 1, p_y - 1), (p_x - 1, p_y + 2), (p_x + 2, p_y - 1), (p_x + 2, p_y + 2),
+                              (p_x, p_y), (p_x + 1, p_y), (p_x, p_y + 1), (p_x + 1, p_y + 1)]:
                 dark_zones[(x, y)] = Tile('dark', x, y)
+                load_val += 1
+                show_progress(amount_sprites, load_val)
 
     gun = FirstWeapon()
     knife = SecondWeapon()
@@ -247,7 +275,8 @@ class Tile(pygame.sprite.Sprite):
                        'empty': load_image('floor.png'), 'door': load_image('door.png')}
         super().__init__((all_sprites, tiles_group) if tile_type != 'dark' else dark_group)
         self.image = tile_images[tile_type]
-        self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
+        self.rect = self.image.get_rect().move((tile_width if tile_type != 'dark' else tile_width / 2) * pos_x,
+                                               (tile_height if tile_type != 'dark' else tile_height / 2) * pos_y)
 
 
 class GameMap:
@@ -309,8 +338,13 @@ class Player(pygame.sprite.Sprite):
             self.x -= 0.5
             self.image = load_image('Player_left.png')
             self.direction = 'left'
-        x, y = int(self.x), int(self.y)
-        for i in [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]:
+        x, y = self.x * 2, self.y * 2
+        for i in [(x, y - 1), (x, y - 2), (x, y + 2), (x, y + 3),
+                  (x + 1, y - 1), (x + 1, y - 2), (x + 1, y + 2), (x + 1, y + 3),
+                  (x - 2, y), (x - 1, y), (x + 2, y), (x + 3, y),
+                  (x - 2, y + 1), (x - 1, y + 1), (x + 2, y + 1), (x + 3, y + 1),
+                  (x - 1, y - 1), (x - 1, y + 2), (x + 2, y - 1), (x + 2, y + 2),
+                  (x, y), (x + 1, y), (x, y + 1), (x + 1, y + 1)]:
             if i in dark_zones.keys():
                 dark_zones[i].kill()
                 del dark_zones[i]
@@ -340,7 +374,7 @@ class Player(pygame.sprite.Sprite):
             pygame.mixer.music.play(1)
 
     def heal(self):
-        if player.inventory['Potion'] and self.hp <= HP:
+        if player.inventory['Potion'] and self.hp < HP:
             pygame.mixer.music.load('data/heal.mp3')
             pygame.mixer.music.play(1)
             player.hp = HP if self.hp + 10 > HP else self.hp + 10
