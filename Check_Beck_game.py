@@ -265,7 +265,7 @@ class Helpful_images(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(helpful_group)
         self.image = load_image('control.png')
-        self.rect = self.image.get_rect().move(1, 1)
+        self.rect = (0, 0)
 
 
 class Player(pygame.sprite.Sprite):
@@ -283,6 +283,10 @@ class Player(pygame.sprite.Sprite):
     def update(self, direction):
         x = int(self.x)
         y = int(self.y)
+        if gamemap.map[y][x] == '(':
+            global game_paused
+            game_paused = (True, 'win')
+            return None
         if (direction == 'up' and gamemap.map[y + (1 if self.y % 1 != 0 else 0) - 1][x] not in ['#', '*'] and
                 gamemap.map[y + (1 if self.y % 1 != 0 else 0) - 1][x + (1 if self.x % 1 != 0 else 0)] not in ['#', '*']):
             self.rect = self.rect.move(0, -25)
@@ -591,7 +595,7 @@ monster_clock = pygame.time.Clock()
 player_timer = 0
 monster_timer = 0
 timer = 0
-
+helpful = Helpful_images()
 camera = Camera()
 running = True
 move = False
@@ -634,7 +638,6 @@ while running:
                     if event.key == pygame.K_4 and gamemap.map[int(player.y) + 1][int(player.x)] == '*':
                         player.inventory['Key'] -= 1
                         door.open()
-                        # game_paused = (True, 'win')
                 if event.key == pygame.K_2:
                     player.active_weapon = 2
                 if event.key == pygame.K_1:
@@ -679,15 +682,17 @@ while running:
         inventory.upgrade()
 
     if game_paused[0]:
-        if game_paused[1] == 'check_control':
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    running = False
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            if game_paused[1] == 'check_control':
                 if event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_F1:
                         game_paused = (False, 'pause_couse')
-        if game_paused[1] == 'win':
-            pass
+            if game_paused[1] == 'win':
+                helpful.image = load_image('congratulations.png')
+                pygame.mixer.music.load('data/congratulations.mp3')
+                pygame.mixer_music.play(-1)
 
         helpful_group.draw(screen)
 
