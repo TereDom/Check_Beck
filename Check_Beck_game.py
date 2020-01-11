@@ -32,7 +32,7 @@ def load_level(filename):
 
 
 def generate_level(level):
-    new_player, x, y, chests, monsters = None, None, None, dict(), dict()
+    new_player, x, y, chests, monsters, door = None, None, None, dict(), dict(), None
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == '.':
@@ -46,13 +46,14 @@ def generate_level(level):
                                                           [x - 1, y - 1], (x, y))
             elif level[y][x] == '@':
                 Tile('empty', x, y)
+
             elif level[y][x] == '*':
-                Tile('door', x, y)
+                door = Door((x, y))
     gun = FirstWeapon()
     knife = SecondWeapon()
-    new_player = Player(3, 3)
     gamemap = GameMap(98, 98, load_level('map.txt'))
-    return gamemap, new_player, x, y, chests, gun, knife, monsters
+    new_player = Player(3, 3)
+    return gamemap, new_player, x, y, chests, gun, knife, monsters, door
 
 
 def random_monster(name, coords, chest_coords):
@@ -234,7 +235,7 @@ def set_direction_hat(event):
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
         tile_images = {'wall': load_image('wall.png'),
-                       'empty': load_image('floor.png'), 'door': load_image('door.png')}
+                       'empty': load_image('floor.png')}
         super().__init__(tiles_group, all_sprites)
         self.image = tile_images[tile_type]
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
@@ -248,8 +249,7 @@ class GameMap:
         self.left = 0
         self.top = 0
         self.cell_size = 0
-        self.map = map
-        self.map = [list(i) for i in self.map]
+        self.map = [list(i) for i in map]
 
     def set_view(self, left, top, cell_size):
         self.left = left
@@ -265,7 +265,7 @@ class Player(pygame.sprite.Sprite):
         super().__init__(all_sprites)
         self.image = player_image
         self.active_weapon = 1
-        self.inventory = {'Ammo': 15, 'Potion': 0, 'Key': 0}
+        self.inventory = {'Ammo': 15, 'Potion': 0, 'Key': 1}
         self.x, self.y = pos_x, pos_y
         self.image = load_image('Player_down.png')
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
@@ -275,26 +275,26 @@ class Player(pygame.sprite.Sprite):
     def update(self, direction):
         x = int(self.x)
         y = int(self.y)
-        if (direction == 'up' and gamemap.map[y + (1 if self.y % 1 != 0 else 0) - 1][x] != '#' and
-                gamemap.map[y + (1 if self.y % 1 != 0 else 0) - 1][x + (1 if self.x % 1 != 0 else 0)] != '#'):
+        if (direction == 'up' and gamemap.map[y + (1 if self.y % 1 != 0 else 0) - 1][x] not in ['#', '*'] and
+                gamemap.map[y + (1 if self.y % 1 != 0 else 0) - 1][x + (1 if self.x % 1 != 0 else 0)] not in ['#', '*']):
             self.rect = self.rect.move(0, -25)
             self.y -= 0.5
             self.image = load_image('Player_up.png')
             self.direction = 'up'
-        elif (direction == 'down' and gamemap.map[y + 1][x] != "#" and
-              gamemap.map[y + 1][x + (1 if self.x % 1 != 0 else 0)] != '#'):
+        elif (direction == 'down' and gamemap.map[y + 1][x] not in ['#', '*'] and
+              gamemap.map[y + 1][x + (1 if self.x % 1 != 0 else 0)] not in ['#', '*']):
             self.rect = self.rect.move(0, 25)
             self.y += 0.5
             self.image = load_image('Player_down.png')
             self.direction = 'down'
-        elif (direction == 'right' and gamemap.map[y][x + 1] != '#' and
-              gamemap.map[y + (1 if self.y % 1 != 0 else 0)][x + 1] != '#'):
+        elif (direction == 'right' and gamemap.map[y][x + 1] not in ['#', '*'] and
+              gamemap.map[y + (1 if self.y % 1 != 0 else 0)][x + 1] not in ['#', '*']):
             self.rect = self.rect.move(25, 0)
             self.x += 0.5
             self.image = load_image('Player_right.png')
             self.direction = 'right'
-        elif (direction == 'left' and gamemap.map[y][x + (1 if self.x % 1 != 0 else 0) - 1] != '#' and
-              gamemap.map[y + (1 if self.y % 1 != 0 else 0)][x + (1 if self.x % 1 != 0 else 0) - 1] != '#'):
+        elif (direction == 'left' and gamemap.map[y][x + (1 if self.x % 1 != 0 else 0) - 1] not in ['#', '*'] and
+              gamemap.map[y + (1 if self.y % 1 != 0 else 0)][x + (1 if self.x % 1 != 0 else 0) - 1] not in ['#', '*']):
             self.rect = self.rect.move(-25, 0)
             self.x -= 0.5
             self.image = load_image('Player_left.png')
@@ -514,6 +514,24 @@ class SecondWeapon(pygame.sprite.Sprite):
                                                       - 55 * 2) // 4 - 55, height * 0.14)
 
 
+class Door(pygame.sprite.Sprite):
+    def __init__(self, coords):
+        super().__init__(all_sprites)
+        self.coords = coords
+        self.image = load_image('door.png')
+        self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
+
+    def open(self):
+        open_door_clock = pygame.time.Clock()
+        open_door_timer = 0
+        pygame.mixer.music.load("data/sound_open_door.mp3")
+        pygame.mixer.music.play(1)
+        while open_door_timer != 900:
+            open_door_timer += open_door_clock.tick()
+        self.image = load_image('open_door.png')
+        gamemap.map[self.coords[1]][self.coords[0]] = '('
+
+
 inventory = Inventory(width, height)
 CHEST_LOOT = [Potion(), Ammo(), Key()]
 LOOTS_WEIGHTS = [30, 30, 10]
@@ -546,7 +564,8 @@ class Chest(pygame.sprite.Sprite):
 
 
 player_image = load_image('Player_down.png')
-gamemap, player, level_x, level_y, chests, gun, knife, monsters = generate_level(load_level('map.txt'))
+gamemap, player, level_x, level_y, chests, gun, knife, monsters, door \
+    = generate_level(load_level('map.txt'))
 
 if pygame.joystick.get_count():
     stick = pygame.joystick.Joystick(0)
@@ -557,88 +576,103 @@ if pygame.joystick.get_count():
 else:
     stick = None
 
+global_clock = pygame.time.Clock()
 player_clock = pygame.time.Clock()
 monster_clock = pygame.time.Clock()
 
 player_timer = 0
 monster_timer = 0
+timer = 0
 
 camera = Camera()
 running = True
 move = False
 direction = None
 flag = True
+game_paused = (False, 'pause')
 
 while running:
     screen.fill(pygame.color.Color("black"))
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        if event.type == pygame.JOYHATMOTION:
-            direction, move, flag = set_direction_hat(event)
-        if event.type == pygame.JOYAXISMOTION:
-            set_direction_rs(player, stick)
-        if event.type == pygame.JOYBUTTONDOWN:
-            if event.button in [7, 6]:
+    if not game_paused[0]:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
                 running = False
-            if event.button == 0 and gamemap.map[int(player.y)][int(player.x)] == '!':
-                chest = chests[(int(player.y), int(player.x))]
-                chest.open_chest()
-                player.inventory[chest.loot_name.type] += chest.loot_num
-                gamemap.map[int(player.y)][int(player.x)] = '?'
-                del chests[(int(player.y), int(player.x))]
-            if event.button == 2:
-                player.hit(1)
-            if event.button == 1:
-                player.hit(2)
-        if event.type == pygame.KEYDOWN:
-            if gamemap.map[int(player.y)][int(player.x)] == '!' and event.key == pygame.K_e:
-                chest = chests[(int(player.y), int(player.x))]
-                chest.open_chest()
-                player.inventory[chest.loot_name.type] += chest.loot_num
-                gamemap.map[int(player.y)][int(player.x)] = '?'
-                del chest
-            if event.key == pygame.K_2:
-                player.active_weapon = 2
-            if event.key == pygame.K_1:
-                player.active_weapon = 1
-            if event.key == pygame.K_SPACE:
-                player.hit()
-            if event.key == pygame.K_ESCAPE:
-                running = False
+            timer += global_clock.tick()
+            if event.type == pygame.JOYHATMOTION:
+                direction, move, flag = set_direction_hat(event)
+            if event.type == pygame.JOYAXISMOTION:
+                set_direction_rs(player, stick)
+            if event.type == pygame.JOYBUTTONDOWN:
+                if event.button in [7, 6]:
+                    running = False
+                if event.button == 0 and gamemap.map[int(player.y)][int(player.x)] == '!':
+                    chest = chests[(int(player.y), int(player.x))]
+                    chest.open_chest()
+                    player.inventory[chest.loot_name.type] += chest.loot_num
+                    gamemap.map[int(player.y)][int(player.x)] = '?'
+                    del chests[(int(player.y), int(player.x))]
+                if event.button == 2:
+                    player.hit(1)
+                if event.button == 1:
+                    player.hit(2)
+            if event.type == pygame.KEYDOWN:
+                if gamemap.map[int(player.y)][int(player.x)] == '!' and event.key == pygame.K_e:
+                    chest = chests[(int(player.y), int(player.x))]
+                    chest.open_chest()
+                    player.inventory[chest.loot_name.type] += chest.loot_num
+                    gamemap.map[int(player.y)][int(player.x)] = '?'
+                    del chest
+                if 'Key' in player.inventory.keys():
+                    if event.key == pygame.K_4 and gamemap.map[int(player.y) + 1][int(player.x)] == '*':
+                        player.inventory['Key'] -= 1
+                        door.open()
+                        game_paused = (True, 'win')
+                if event.key == pygame.K_2:
+                    player.active_weapon = 2
+                if event.key == pygame.K_1:
+                    player.active_weapon = 1
+                if event.key == pygame.K_SPACE:
+                    player.hit()
+                if event.key == pygame.K_ESCAPE:
+                    running = False
 
-        if (event.type == pygame.KEYUP or event.type == pygame.KEYDOWN) and \
-                event.key in [pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d]:
-            direction, move = set_direction_wasd(event)
+            if (event.type == pygame.KEYUP or event.type == pygame.KEYDOWN) and \
+                    event.key in [pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d]:
+                direction, move = set_direction_wasd(event)
 
-    if stick is not None and flag:
-        direction, move = set_direction_ls(stick)
+        if stick is not None and flag:
+            direction, move = set_direction_ls(stick)
 
-    player_timer += player_clock.tick()
-    monster_timer += monster_clock.tick()
+        player_timer += player_clock.tick()
+        monster_timer += monster_clock.tick()
 
-    if monster_timer >= 150:
-        for monster in monsters_group:
-            monster.update(monster.direction)
-        monster_timer = 0
+        if monster_timer >= 150:
+            for monster in monsters_group:
+                monster.update(monster.direction)
+            monster_timer = 0
 
-    if move and player_timer >= 150:
-        if player.direction != direction:
-            player.update_direction(direction)
-        else:
-            player.update(direction)
-        player_timer = 0
+        if move and player_timer >= 150:
+            if player.direction != direction:
+                player.update_direction(direction)
+            else:
+                player.update(direction)
+            player_timer = 0
 
-    camera.update(player)
-    for sprite in all_sprites:
-        camera.apply(sprite)
+        camera.update(player)
+        for sprite in all_sprites:
+            camera.apply(sprite)
 
-    gamemap.render()
-    all_sprites.draw(screen)
+        gamemap.render()
+        all_sprites.draw(screen)
 
-    monsters_group.draw(screen)
-    inventory.upgrade()
-    pygame.display.flip()
+        monsters_group.draw(screen)
+        inventory.upgrade()
+        pygame.display.flip()
+
+    if game_paused[0]:
+        if game_paused[1] == 'win':
+            pass
+
 
 if stick is not None:
     stick.quit()
