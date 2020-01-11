@@ -9,6 +9,7 @@ inventory_sprites = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 monsters_group = pygame.sprite.Group()
+helpful_group = pygame.sprite.Group()
 LIST_OF_MONSTERS = ['Bat', 'Dragon', 'SkeletonBomber', 'Frankenstein']
 size = width, height = 850, 500
 screen = pygame.display.set_mode(size)
@@ -258,6 +259,13 @@ class GameMap:
 
     def render(self):
         pass
+
+
+class Helpful_images(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(helpful_group)
+        self.image = None
+        self.rect = None
 
 
 class Player(pygame.sprite.Sprite):
