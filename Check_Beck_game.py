@@ -264,8 +264,8 @@ class GameMap:
 class Helpful_images(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(helpful_group)
-        self.image = None
-        self.rect = None
+        self.image = load_image('control.png')
+        self.rect = self.image.get_rect().move(1, 1)
 
 
 class Player(pygame.sprite.Sprite):
@@ -597,11 +597,11 @@ running = True
 move = False
 direction = None
 flag = True
-game_paused = (False, 'pause')
+game_paused = (False, 'pause_cause')
 
 while running:
-    screen.fill(pygame.color.Color("black"))
     if not game_paused[0]:
+        screen.fill(pygame.color.Color("black"))
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -634,7 +634,7 @@ while running:
                     if event.key == pygame.K_4 and gamemap.map[int(player.y) + 1][int(player.x)] == '*':
                         player.inventory['Key'] -= 1
                         door.open()
-                        game_paused = (True, 'win')
+                        # game_paused = (True, 'win')
                 if event.key == pygame.K_2:
                     player.active_weapon = 2
                 if event.key == pygame.K_1:
@@ -643,6 +643,8 @@ while running:
                     player.hit()
                 if event.key == pygame.K_ESCAPE:
                     running = False
+                if event.key == pygame.K_F1:
+                    game_paused = (True, 'check_control')
 
             if (event.type == pygame.KEYUP or event.type == pygame.KEYDOWN) and \
                     event.key in [pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d]:
@@ -675,12 +677,21 @@ while running:
 
         monsters_group.draw(screen)
         inventory.upgrade()
-        pygame.display.flip()
 
     if game_paused[0]:
+        if game_paused[1] == 'check_control':
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                if event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_F1:
+                        game_paused = (False, 'pause_couse')
         if game_paused[1] == 'win':
             pass
 
+        helpful_group.draw(screen)
+
+    pygame.display.flip()
 
 if stick is not None:
     stick.quit()
