@@ -339,6 +339,13 @@ class Player(pygame.sprite.Sprite):
             pygame.mixer.music.load("data/hit.mp3")
             pygame.mixer.music.play(1)
 
+    def heal(self):
+        if player.inventory['Potion'] and self.hp <= HP:
+            pygame.mixer.music.load('data/heal.mp3')
+            pygame.mixer.music.play(1)
+            player.hp = HP if self.hp + 10 > HP else self.hp + 10
+            player.inventory['Potion'] -= 1
+
 
 class Camera:
     def __init__(self):
@@ -553,8 +560,12 @@ class Chest(pygame.sprite.Sprite):
 
     def open_chest(self):
         global chests_found
-        pygame.mixer.music.load("data/ammo_picked.mp3") if self.loot_name.type == 'Ammo' \
-            else pygame.mixer.music.load("data/potion_picked.mp3")
+        if self.loot_name == 'Ammo':
+            pygame.mixer.music.load("data/ammo_picked.mp3")
+        elif self.loot_name == "Key":
+            pygame.mixer.music.load('data/key_picked.mp3')
+        else:
+            pygame.mixer.music.load("data/potion_picked.mp3")
         self.image = load_image('open_chest.png')
         pygame.mixer.music.play(1)
         chests_found += 1
@@ -603,9 +614,9 @@ while running:
                 gamemap.map[int(player.y)][int(player.x)] = '?'
                 del chests[(int(player.y), int(player.x))]
             if event.button == 2:
-                player.hit(1)
+                player.hit()
             if event.button == 1:
-                player.hit(2)
+                player.heal()
         if event.type == pygame.KEYDOWN:
             if gamemap.map[int(player.y)][int(player.x)] == '!' and event.key == pygame.K_e:
                 chest = chests[(int(player.y), int(player.x))]
@@ -617,6 +628,8 @@ while running:
                 player.active_weapon = 2
             if event.key == pygame.K_1:
                 player.active_weapon = 1
+            if event.key == pygame.K_3:
+                player.heal()
             if event.key == pygame.K_SPACE:
                 player.hit()
             if event.key == pygame.K_ESCAPE:
