@@ -40,7 +40,16 @@ def show_progress(setMax, setVal):
     length_cur = int(length_pb / 100 * precent_cur)
     # Выводим прогресс бар
     sys.stderr.write(
-        '\rProgress: [' + '#' * length_cur + '.' * (length_pb - length_cur) + '] ' + str(precent_cur) + '%')
+        '\rLoading: [' + '#' * length_cur + '.' * (length_pb - length_cur) + '] ' + str(precent_cur) + '%')
+
+    screen.fill(pygame.color.Color('black'))
+    width_pb = 500
+    height_pb = 50
+    pygame.draw.rect(screen, pygame.color.Color('white'), ((width - width_pb) // 2, (height - height_pb) // 2,
+                                                           width_pb, height_pb), 2)
+    pygame.draw.rect(screen, pygame.color.Color("white"), ((width - width_pb) // 2, (height - height_pb) // 2,
+                                                           int(width_pb / 100 * precent_cur), height_pb), 0)
+    pygame.display.flip()
 
 
 def load_image(name, colorkey=None):
