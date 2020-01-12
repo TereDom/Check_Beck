@@ -1,7 +1,7 @@
 import pygame
 import os
 import random
-import copy
+
 
 pygame.init()
 
@@ -17,10 +17,12 @@ monsters_group = pygame.sprite.Group()
 LIST_OF_MONSTERS = ['Bat', 'Dragon', 'SkeletonBomber', 'Frankenstein']
 
 size = width, height = 850, 500
-screen = pygame.display.set_mode(size)
 tile_width = tile_height = 50
 HEALTH_BAR_SIZE = 178
 chests_found = 0
+HP = 50
+
+screen = pygame.display.set_mode(size)
 
 
 def load_image(name, colorkey=None):
@@ -390,6 +392,8 @@ class Bat(pygame.sprite.Sprite):
         if self.hp <= 0:
             del monsters[self.coords]
             self.kill()
+        pygame.mixer.music.load('data/damage.mp3')
+        pygame.mixer.music.play(1)
 
 
 class Dragon(pygame.sprite.Sprite):
@@ -400,6 +404,7 @@ class Dragon(pygame.sprite.Sprite):
         self.hp = 40
         self.DAMAGE = 10
         self.coords = coords
+        self.x, self.y = self.coords
         self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
         self.direction = ('down', 0, 1)
         self.rage = False
@@ -433,6 +438,8 @@ class Dragon(pygame.sprite.Sprite):
         if self.hp <= 0:
             del monsters[self.coords]
             self.kill()
+        pygame.mixer.music.load('data/damage.mp3')
+        pygame.mixer.music.play(1)
 
 
 class SkeletonBomber(pygame.sprite.Sprite):
@@ -477,6 +484,8 @@ class SkeletonBomber(pygame.sprite.Sprite):
         if self.hp <= 0:
             del monsters[self.coords]
             self.kill()
+        pygame.mixer.music.load('data/damage.mp3')
+        pygame.mixer.music.play(1)
 
 
 class Frankenstein(pygame.sprite.Sprite):
@@ -521,6 +530,8 @@ class Frankenstein(pygame.sprite.Sprite):
         if self.hp <= 0:
             del monsters[self.coords]
             self.kill()
+        pygame.mixer.music.load('data/damage.mp3')
+        pygame.mixer.music.play(1)
 
 
 class Potion(pygame.sprite.Sprite):
@@ -586,7 +597,7 @@ class Bullet(pygame.sprite.Sprite):
         self.direction = master.direction
         self.coords = master.x, master.y
         self.x, self.y = self.coords
-        self.rect = copy.deepcopy(master.rect)
+        self.rect = master.rect
         self.dir = {'down': [0, 1], 'right': [1, 0], 'up': [0, -1], 'left': [-1, 0]}
 
     def update(self):
