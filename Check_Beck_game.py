@@ -17,12 +17,10 @@ monsters_group = pygame.sprite.Group()
 LIST_OF_MONSTERS = ['Bat', 'Dragon', 'SkeletonBomber', 'Frankenstein']
 
 size = width, height = 850, 500
+screen = pygame.display.set_mode(size)
 tile_width = tile_height = 50
-HP = 50
 HEALTH_BAR_SIZE = 178
 chests_found = 0
-
-screen = pygame.display.set_mode(size)
 
 
 def load_image(name, colorkey=None):
@@ -268,8 +266,6 @@ class GameMap:
         pass
 
 
-
-
 class Player(pygame.sprite.Sprite):
     def __init__(self, pos_x, pos_y):
         super().__init__(all_sprites, creatures_group)
@@ -279,7 +275,7 @@ class Player(pygame.sprite.Sprite):
         self.x, self.y = pos_x, pos_y
         self.image = load_image('Player_down.png')
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
-        self.hp = HP
+        self.hp = 50
         self.direction = 'down'
         self.coords = (self.x, self.y)
 
@@ -357,8 +353,8 @@ class Bat(pygame.sprite.Sprite):
         super().__init__(all_sprites, monsters_group, creatures_group)
         self.image = load_image('bat_down.png')
         self.CHEST_COORDS = chest_coords
-        self.hp = 50
-        self.DAMAGE = None
+        self.DAMAGE = 5
+        self.hp = 20
         self.coords = coords
         self.x, self.y = self.coords
         self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
@@ -401,10 +397,9 @@ class Dragon(pygame.sprite.Sprite):
         super().__init__(all_sprites, monsters_group, creatures_group)
         self.image = load_image('dragon_down.png')
         self.CHEST_COORDS = chest_coords
-        self.hp = 50
-        self.DAMAGE = None
+        self.hp = 40
+        self.DAMAGE = 10
         self.coords = coords
-        self.x, self.y = self.coords
         self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
         self.direction = ('down', 0, 1)
         self.rage = False
@@ -445,8 +440,8 @@ class SkeletonBomber(pygame.sprite.Sprite):
         super().__init__(all_sprites, monsters_group, creatures_group)
         self.image = load_image('skeleton_down.png')
         self.CHEST_COORDS = chest_coords
-        self.hp = 50
-        self.DAMAGE = None
+        self.hp = 10
+        self.DAMAGE = 25
         self.coords = coords
         self.x, self.y = self.coords
         self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
@@ -489,8 +484,8 @@ class Frankenstein(pygame.sprite.Sprite):
         super().__init__(all_sprites, monsters_group, creatures_group)
         self.image = load_image('frankenstein_down.png')
         self.CHEST_COORDS = chest_coords
-        self.hp = 50
-        self.DAMAGE = None
+        self.hp = 75
+        self.DAMAGE = 15
         self.coords = coords
         self.x, self.y = self.coords
         self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
@@ -623,6 +618,7 @@ class Bullet(pygame.sprite.Sprite):
         if self.coords in monsters.keys():
             monsters[self.coords].damage('bullet')
             self.kill()
+
 
 class Chest(pygame.sprite.Sprite):
     def __init__(self, coords):
