@@ -532,13 +532,14 @@ class Bullet(pygame.sprite.Sprite):
     def __init__(self, master):
         super().__init__(bullet_group, all_sprites)
         self.image = load_image('Bullet.png')
-        self.direction = copy.deepcopy(master.direction)
-        self.coords = copy.deepcopy(list(master.coords))
+        self.direction = master.direction
+        self.coords = master.x, master.y
         self.x, self.y = self.coords
         self.rect = copy.deepcopy(master.rect)
         self.dir = {'down': [0, 1], 'right': [1, 0], 'up': [0, -1], 'left': [-1, 0]}
 
     def update(self):
+        gm = gamemap
         x = int(self.x)
         y = int(self.y)
         if (self.direction == 'up' and gamemap.map[y + (1 if self.y % 1 != 0 else 0) - 1][x] != '#' and
