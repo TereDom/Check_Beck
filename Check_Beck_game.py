@@ -1,6 +1,7 @@
 import pygame
 import os
 import random
+import copy
 
 pygame.init()
 bullet_group = pygame.sprite.Group()
@@ -48,9 +49,10 @@ def generate_level(level):
                                                           [x - 1, y - 1], (x, y))
             elif level[y][x] == '@':
                 Tile('empty', x, y)
-                new_player = Player(x, y)
+
             elif level[y][x] == '*':
                 Tile('door', x, y)
+    new_player = Player(3, 3)
     gun = FirstWeapon()
     knife = SecondWeapon()
 
@@ -261,10 +263,6 @@ class GameMap:
     def render(self):
         pass
 
-    def update(self):
-        for creature in creatures_group:
-            self.map[int(creature.coords[0])][int(creature.coords[1])] = creature
-
 
 
 
@@ -308,6 +306,7 @@ class Player(pygame.sprite.Sprite):
             self.x -= 0.5
             self.image = load_image('Player_left.png')
             self.direction = 'left'
+        self.coords = (x, y)
 
     def update_direction(self, direction):
         self.direction = direction
@@ -531,20 +530,39 @@ LOOTS_WEIGHTS = [30, 30, 10]
 
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, master):
-        super().__init__(all_sprites, bullet_group)
+        super().__init__(bullet_group, all_sprites)
         self.image = load_image('Bullet.png')
-        self.direction = master.direction
-        self.coords = list(master.coords)
-        self.rect = self.image.get_rect().move(tile_width * self.coords[0], tile_height * self.coords[1])
+        self.direction = copy.deepcopy(master.direction)
+        self.coords = copy.deepcopy(list(master.coords))
+        self.x, self.y = self.coords
+        self.rect = copy.deepcopy(master.rect)
         self.dir = {'down': [0, 1], 'right': [1, 0], 'up': [0, -1], 'left': [-1, 0]}
 
     def update(self):
-        if gamemap.map[int(self.coords[1]) + self.dir[self.direction][1]][int(self.coords[0])
-                                                                     + self.dir[self.direction][0]] != "#":
-            self.coords[0] += self.dir[self.direction][0] * 0.5
-            self.coords[1] += self.dir[self.direction][1] * 0.5
-            self.rect = self.image.get_rect().move(tile_width * self.coords[0], tile_height * self.coords[1])
-
+        x = int(self.x)
+        y = int(self.y)
+        if (self.direction == 'up' and gamemap.map[y + (1 if self.y % 1 != 0 else 0) - 1][x] != '#' and
+                gamemap.map[y + (1 if self.y % 1 != 0 else 0) - 1][x + (1 if self.x % 1 != 0 else 0)] != '#'):
+            self.rect = self.rect.move(0, -25)
+            self.y -= 0.5
+            self.coords = (x, y)
+        elif (self.direction == 'down' and gamemap.map[y + 1][x] != "#" and
+              gamemap.map[y + 1][x + (1 if self.x % 1 != 0 else 0)] != '#'):
+            self.rect = self.rect.move(0, 25)
+            self.y += 0.5
+            self.coords = (x, y)
+        elif (self.direction == 'right' and gamemap.map[y][x + 1] != '#' and
+              gamemap.map[y + (1 if self.y % 1 != 0 else 0)][x + 1] != '#'):
+            self.rect = self.rect.move(25, 0)
+            self.x += 0.5
+            self.coords = (x, y)
+        elif (self.direction == 'left' and gamemap.map[y][x + (1 if self.x % 1 != 0 else 0) - 1] != '#' and
+              gamemap.map[y + (1 if self.y % 1 != 0 else 0)][x + (1 if self.x % 1 != 0 else 0) - 1] != '#'):
+            self.rect = self.rect.move(-25, 0)
+            self.x -= 0.5
+            self.coords = (x, y)
+        else:
+            self.kill()
 
 class Chest(pygame.sprite.Sprite):
     def __init__(self, coords):
@@ -574,8 +592,6 @@ class Chest(pygame.sprite.Sprite):
 
 player_image = load_image('Player_down.png')
 gamemap, player, level_x, level_y, chests, gun, knife, monsters = generate_level(load_level('map.txt'))
-gamemap.update()
-
 if pygame.joystick.get_count():
     stick = pygame.joystick.Joystick(0)
     stick.init()
@@ -659,9 +675,10 @@ while running:
             player.update(direction)
         player_timer = 0
 
-    for sprite in bullet_group:
-        sprite.update()
-        print(sprite.coords)
+    if bul_timer >= 30:
+        for sprite in bullet_group:
+            sprite.update()
+        bul_timer = 0
 
     camera.update(player)
     for sprite in all_sprites:
@@ -669,12 +686,8 @@ while running:
 
     gamemap.render()
     all_sprites.draw(screen)
-    bullet_group.draw(screen)
     monsters_group.draw(screen)
     inventory.upgrade()
-    gamemap.update()
-
-    bul_timer = 0
     pygame.display.flip()
 
 if stick is not None:
