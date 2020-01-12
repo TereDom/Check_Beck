@@ -4,6 +4,7 @@ import random
 import copy
 
 pygame.init()
+
 bullet_group = pygame.sprite.Group()
 creatures_group = pygame.sprite.Group()
 weapons_group = pygame.sprite.Group()
@@ -12,13 +13,16 @@ inventory_sprites = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 monsters_group = pygame.sprite.Group()
+
 LIST_OF_MONSTERS = ['Bat', 'Dragon', 'SkeletonBomber', 'Frankenstein']
+
 size = width, height = 850, 500
-screen = pygame.display.set_mode(size)
 tile_width = tile_height = 50
 HP = 50
 HEALTH_BAR_SIZE = 178
 chests_found = 0
+
+screen = pygame.display.set_mode(size)
 
 
 def load_image(name, colorkey=None):
@@ -45,8 +49,8 @@ def generate_level(level):
             elif level[y][x] == '!':
                 Tile("empty", x, y)
                 chests[(y, x)] = Chest((x, y))
-                monsters[(y - 1, x - 1)] = random_monster(random.choices(LIST_OF_MONSTERS)[0],
-                                                          [x - 1, y - 1], (x, y))
+                monsters[(x - 1, y - 1)] = random_monster(random.choices(LIST_OF_MONSTERS)[0],
+                                                          (x - 1, y - 1), (x, y))
             elif level[y][x] == '@':
                 Tile('empty', x, y)
 
@@ -353,9 +357,10 @@ class Bat(pygame.sprite.Sprite):
         super().__init__(all_sprites, monsters_group, creatures_group)
         self.image = load_image('bat_down.png')
         self.CHEST_COORDS = chest_coords
-        self.HP = 50
+        self.hp = 50
         self.DAMAGE = None
         self.coords = coords
+        self.x, self.y = self.coords
         self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
         self.direction = ('down', 0, 1)
         self.rage = False
@@ -363,9 +368,12 @@ class Bat(pygame.sprite.Sprite):
 
     def update(self, direction):
         if not self.rage:
+            del monsters[self.coords]
             self.rect = self.rect.move(self.direction[1] * 25, self.direction[2] * 25)
-            self.coords[0] += self.direction[1] * 0.5
-            self.coords[1] += self.direction[2] * 0.5
+            self.x += self.direction[1] * 0.5
+            self.y += self.direction[2] * 0.5
+            self.coords = self.x, self.y
+            monsters[self.coords] = self
             self.i += 1
             if self.i == 4:
                 self.direction = self.change_direction(self.direction)
@@ -378,15 +386,25 @@ class Bat(pygame.sprite.Sprite):
         self.image = load_image('bat_' + new_dir[0] + '.png')
         return new_dir
 
+    def damage(self, type):
+        if type == 'bullet':
+            self.hp -= 5
+        elif type == 'knife':
+            self.hp -= 10
+        if self.hp <= 0:
+            del monsters[self.coords]
+            self.kill()
+
 
 class Dragon(pygame.sprite.Sprite):
     def __init__(self, coords, chest_coords):
         super().__init__(all_sprites, monsters_group, creatures_group)
         self.image = load_image('dragon_down.png')
         self.CHEST_COORDS = chest_coords
-        self.HP = 50
+        self.hp = 50
         self.DAMAGE = None
         self.coords = coords
+        self.x, self.y = self.coords
         self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
         self.direction = ('down', 0, 1)
         self.rage = False
@@ -394,9 +412,12 @@ class Dragon(pygame.sprite.Sprite):
 
     def update(self, direction):
         if not self.rage:
+            del monsters[self.coords]
             self.rect = self.rect.move(self.direction[1] * 25, self.direction[2] * 25)
-            self.coords[0] += self.direction[1] * 0.5
-            self.coords[1] += self.direction[2] * 0.5
+            self.x += self.direction[1] * 0.5
+            self.y += self.direction[2] * 0.5
+            self.coords = self.x, self.y
+            monsters[self.coords] = self
             self.i += 1
             if self.i == 4:
                 self.direction = self.change_direction(self.direction)
@@ -409,15 +430,25 @@ class Dragon(pygame.sprite.Sprite):
         self.image = load_image('dragon_' + new_dir[0] + '.png')
         return new_dir
 
+    def damage(self, type):
+        if type == 'bullet':
+            self.hp -= 5
+        elif type == 'knife':
+            self.hp -= 10
+        if self.hp <= 0:
+            del monsters[self.coords]
+            self.kill()
+
 
 class SkeletonBomber(pygame.sprite.Sprite):
     def __init__(self, coords, chest_coords):
         super().__init__(all_sprites, monsters_group, creatures_group)
         self.image = load_image('skeleton_down.png')
         self.CHEST_COORDS = chest_coords
-        self.HP = 50
+        self.hp = 50
         self.DAMAGE = None
         self.coords = coords
+        self.x, self.y = self.coords
         self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
         self.direction = ('down', 0, 1)
         self.rage = False
@@ -425,9 +456,12 @@ class SkeletonBomber(pygame.sprite.Sprite):
 
     def update(self, direction):
         if not self.rage:
+            del monsters[self.coords]
             self.rect = self.rect.move(self.direction[1] * 25, self.direction[2] * 25)
-            self.coords[0] += self.direction[1] * 0.5
-            self.coords[1] += self.direction[2] * 0.5
+            self.x += self.direction[1] * 0.5
+            self.y += self.direction[2] * 0.5
+            self.coords = self.x, self.y
+            monsters[self.coords] = self
             self.i += 1
             if self.i == 4:
                 self.direction = self.change_direction(self.direction)
@@ -440,15 +474,25 @@ class SkeletonBomber(pygame.sprite.Sprite):
         self.image = load_image('skeleton_' + new_dir[0] + '.png')
         return new_dir
 
+    def damage(self, type):
+        if type == 'bullet':
+            self.hp -= 5
+        elif type == 'knife':
+            self.hp -= 10
+        if self.hp <= 0:
+            del monsters[self.coords]
+            self.kill()
+
 
 class Frankenstein(pygame.sprite.Sprite):
     def __init__(self, coords, chest_coords):
         super().__init__(all_sprites, monsters_group, creatures_group)
         self.image = load_image('frankenstein_down.png')
         self.CHEST_COORDS = chest_coords
-        self.HP = 50
+        self.hp = 50
         self.DAMAGE = None
         self.coords = coords
+        self.x, self.y = self.coords
         self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
         self.direction = ('down', 0, 1)
         self.rage = False
@@ -456,9 +500,12 @@ class Frankenstein(pygame.sprite.Sprite):
 
     def update(self, direction):
         if not self.rage:
+            del monsters[self.coords]
             self.rect = self.rect.move(self.direction[1] * 25, self.direction[2] * 25)
-            self.coords[0] += self.direction[1] * 0.5
-            self.coords[1] += self.direction[2] * 0.5
+            self.x += self.direction[1] * 0.5
+            self.y += self.direction[2] * 0.5
+            self.coords = self.x, self.y
+            monsters[self.coords] = self
             self.i += 1
             if self.i == 4:
                 self.direction = self.change_direction(self.direction)
@@ -470,6 +517,15 @@ class Frankenstein(pygame.sprite.Sprite):
         new_dir = possible_dir[new_dir if new_dir != len(possible_dir) else 0]
         self.image = load_image('frankenstein_' + new_dir[0] + '.png')
         return new_dir
+
+    def damage(self, type):
+        if type == 'bullet':
+            self.hp -= 5
+        elif type == 'knife':
+            self.hp -= 10
+        if self.hp <= 0:
+            del monsters[self.coords]
+            self.kill()
 
 
 class Potion(pygame.sprite.Sprite):
@@ -539,7 +595,6 @@ class Bullet(pygame.sprite.Sprite):
         self.dir = {'down': [0, 1], 'right': [1, 0], 'up': [0, -1], 'left': [-1, 0]}
 
     def update(self):
-        gm = gamemap
         x = int(self.x)
         y = int(self.y)
         if (self.direction == 'up' and gamemap.map[y + (1 if self.y % 1 != 0 else 0) - 1][x] != '#' and
@@ -563,6 +618,10 @@ class Bullet(pygame.sprite.Sprite):
             self.x -= 0.5
             self.coords = (x, y)
         else:
+            self.kill()
+
+        if self.coords in monsters.keys():
+            monsters[self.coords].damage('bullet')
             self.kill()
 
 class Chest(pygame.sprite.Sprite):
@@ -593,6 +652,7 @@ class Chest(pygame.sprite.Sprite):
 
 player_image = load_image('Player_down.png')
 gamemap, player, level_x, level_y, chests, gun, knife, monsters = generate_level(load_level('map.txt'))
+
 if pygame.joystick.get_count():
     stick = pygame.joystick.Joystick(0)
     stick.init()
