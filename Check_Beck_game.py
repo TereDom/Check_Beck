@@ -849,7 +849,6 @@ class Bullet(pygame.sprite.Sprite):
                     (self.coords[0], self.coords[1] + 0.5) == monster.coords) and not (
                     (self.coords[0] + 0.5, self.coords[1]) == monster.coords) and not (
                     (self.coords[0] - 0.5, self.coords[1]) == monster.coords)):
-                print('сдохни тварь')
                 monster.damage('bullet')
                 self.kill()
 
