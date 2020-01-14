@@ -479,17 +479,13 @@ class Bat(pygame.sprite.Sprite):
             x_changed = self.way[0][0] - self.x
             if y_changed != 0:
                 if y_changed > 0:
-                    print(0)
                     return possible_dir[0]
                 elif y_changed < 0:
-                    print(2)
                     return possible_dir[2]
             elif x_changed != 0:
                 if x_changed > 0:
-                    print(1)
                     return possible_dir[1]
                 elif x_changed < 0:
-                    print(3)
                     return possible_dir[3]
 
     def move(self):
@@ -723,6 +719,7 @@ class Bullet(pygame.sprite.Sprite):
     def update(self):
         x = int(self.x)
         y = int(self.y)
+
         if (self.direction == 'up' and gamemap.map[y + (1 if self.y % 1 != 0 else 0) - 1][x] != '#' and
                 gamemap.map[y + (1 if self.y % 1 != 0 else 0) - 1][x + (1 if self.x % 1 != 0 else 0)] != '#'):
             self.rect = self.rect.move(0, -25)
@@ -745,10 +742,17 @@ class Bullet(pygame.sprite.Sprite):
             self.coords = (x, y)
         else:
             self.kill()
+        lst = list(monsters.values())
+        for monster in lst:
+            if not (not (self.coords == monster.coords) and not (
+                    (self.coords[0], self.coords[1] - 0.5) == monster.coords) and not (
+                    (self.coords[0], self.coords[1] + 0.5) == monster.coords) and not (
+                    (self.coords[0] + 0.5, self.coords[1]) == monster.coords) and not (
+                    (self.coords[0] - 0.5, self.coords[1]) == monster.coords)):
+                print('сдохни тварь')
+                monster.damage('bullet')
+                self.kill()
 
-        if self.coords in monsters.keys():
-            monsters[self.coords].damage('bullet')
-            self.kill()
 
 
 class MiniMap:
