@@ -819,6 +819,7 @@ class Bullet(pygame.sprite.Sprite):
     def update(self):
         x = int(self.x)
         y = int(self.y)
+
         if (self.direction == 'up' and gamemap.map[y + (1 if self.y % 1 != 0 else 0) - 1][x] != '#' and
                 gamemap.map[y + (1 if self.y % 1 != 0 else 0) - 1][x + (1 if self.x % 1 != 0 else 0)] != '#'):
             self.rect = self.rect.move(0, -25)
@@ -841,10 +842,17 @@ class Bullet(pygame.sprite.Sprite):
             self.coords = (x, y)
         else:
             self.kill()
+        lst = list(monsters.values())
+        for monster in lst:
+            if not (not (self.coords == monster.coords) and not (
+                    (self.coords[0], self.coords[1] - 0.5) == monster.coords) and not (
+                    (self.coords[0], self.coords[1] + 0.5) == monster.coords) and not (
+                    (self.coords[0] + 0.5, self.coords[1]) == monster.coords) and not (
+                    (self.coords[0] - 0.5, self.coords[1]) == monster.coords)):
+                print('сдохни тварь')
+                monster.damage('bullet')
+                self.kill()
 
-        if self.coords in monsters.keys():
-            monsters[self.coords].damage('bullet')
-            self.kill()
 
 
 class MiniMap:
