@@ -429,6 +429,7 @@ class Bat(pygame.sprite.Sprite):
         self.CHEST_COORDS = chest_coords
         self.DAMAGE = 5
         self.hp = 20
+        self.attack_radius = 1
         self.coords = coords
         self.x, self.y = self.coords
         self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
@@ -487,12 +488,19 @@ class Bat(pygame.sprite.Sprite):
 
     def move(self):
         del monsters[self.coords]
+        if self.rage[0]:
+            if abs(self.x - player.x) <= self.attack_radius and \
+                    abs(self.y - player.y) <= self.attack_radius:
+                self.attack()
         self.rect = self.rect.move(self.direction[1] * 25, self.direction[2] * 25)
         self.x += self.direction[1] * 0.5
         self.y += self.direction[2] * 0.5
         self.coords = self.x, self.y
         self.image = load_image('bat_' + self.direction[0] + '.png')
         monsters[self.coords] = self
+
+    def attack(self):
+        player.hp -= self.DAMAGE
 
     def damage(self, type):
         if type == 'bullet':
