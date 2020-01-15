@@ -122,6 +122,7 @@ def random_monster(name, coords, chest_coords):
     elif name == 'Frankenstein':
         return Frankenstein(coords, chest_coords)
 
+
 class Inventory:
     def __init__(self, width, height):
         self.x = width * 0.76
@@ -434,7 +435,7 @@ class Bat(pygame.sprite.Sprite):
         self.direction = ('down', 0, 1)
         self.rage = (False, 'None')
         self.i = 0
-        self.way = []
+        self.way = [self.CHEST_COORDS]
 
     def update(self, direction):
         if not self.rage[0]:
@@ -447,7 +448,7 @@ class Bat(pygame.sprite.Sprite):
                 self.rage = (True, 'hit')
             elif gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?':
                 self.rage = (True, 'open_chest')
-        if self.rage[1] == 'hit':
+        if self.rage[0]:
             if self.way:
                 if self.way[-1] != (player.x, player.y):
                     self.way.append((player.x, player.y))
@@ -458,9 +459,6 @@ class Bat(pygame.sprite.Sprite):
                     del self.way[0]
             else:
                 self.way.append((player.x, player.y))
-        elif (self.rage == 'open_chest' and
-              (self.CHEST_COORDS[0] - self.x == 0) or (self.CHEST_COORDS[1] - self.y == 0)):
-            pass
 
     def change_direction(self, old_dir):
         possible_dir = [('down', 0, 1), ('right', 1, 0), ('up', 0, -1), ('left', -1, 0)]
@@ -517,7 +515,7 @@ class Dragon(pygame.sprite.Sprite):
         self.direction = ('down', 0, 1)
         self.rage = (False, 'None')
         self.i = 0
-        self.way = []
+        self.way = [self.CHEST_COORDS]
 
     def update(self, direction):
         if not self.rage[0]:
@@ -530,7 +528,7 @@ class Dragon(pygame.sprite.Sprite):
                 self.rage = (True, 'hit')
             elif gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?':
                 self.rage = (True, 'open_chest')
-        if self.rage[1] == 'hit':
+        if self.rage[0]:
             if self.way:
                 if self.way[-1] != (player.x, player.y):
                     self.way.append((player.x, player.y))
@@ -541,9 +539,6 @@ class Dragon(pygame.sprite.Sprite):
                     del self.way[0]
             else:
                 self.way.append((player.x, player.y))
-        elif (self.rage == 'open_chest' and
-              (self.CHEST_COORDS[0] - self.x == 0) or (self.CHEST_COORDS[1] - self.y == 0)):
-            pass
 
     def change_direction(self, old_dir):
         possible_dir = [('down', 0, 1), ('right', 1, 0), ('up', 0, -1), ('left', -1, 0)]
@@ -599,33 +594,30 @@ class SkeletonBomber(pygame.sprite.Sprite):
         self.direction = ('down', 0, 1)
         self.rage = (False, 'None')
         self.i = 0
-        self.way = []
+        self.way = [self.CHEST_COORDS]
 
     def update(self, direction):
         if not self.rage[0]:
             self.move()
             self.i += 1
-            if self.i == 4:
+            if self.i == 2:
                 self.direction = self.change_direction(self.direction)
                 self.i = 0
             if self.hp < 10:
                 self.rage = (True, 'hit')
             elif gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?':
                 self.rage = (True, 'open_chest')
-        if self.rage[1] == 'hit':
+        if self.rage[0]:
             if self.way:
                 if self.way[-1] != (player.x, player.y):
-                    self.way.append((player.x, player.y))
+                    self.way.append((int(player.x), int(player.y)))
                 self.direction = self.change_direction(self.direction)
                 if self.coords != self.way[0]:
                     self.move()
                 else:
                     del self.way[0]
             else:
-                self.way.append((player.x, player.y))
-        elif (self.rage == 'open_chest' and
-              (self.CHEST_COORDS[0] - self.x == 0) or (self.CHEST_COORDS[1] - self.y == 0)):
-            pass
+                self.way.append((int(player.x), int(player.y)))
 
     def change_direction(self, old_dir):
         possible_dir = [('down', 0, 1), ('right', 1, 0), ('up', 0, -1), ('left', -1, 0)]
@@ -649,9 +641,9 @@ class SkeletonBomber(pygame.sprite.Sprite):
 
     def move(self):
         del monsters[self.coords]
-        self.rect = self.rect.move(self.direction[1] * 25, self.direction[2] * 25)
-        self.x += self.direction[1] * 0.5
-        self.y += self.direction[2] * 0.5
+        self.rect = self.rect.move(self.direction[1] * 50, self.direction[2] * 50)
+        self.x += self.direction[1]
+        self.y += self.direction[2]
         self.coords = self.x, self.y
         self.image = load_image('skeleton_' + self.direction[0] + '.png')
         monsters[self.coords] = self
@@ -681,7 +673,7 @@ class Frankenstein(pygame.sprite.Sprite):
         self.direction = ('down', 0, 1)
         self.rage = (False, 'None')
         self.i = 0
-        self.way = []
+        self.way = [self.CHEST_COORDS]
 
     def update(self, direction):
         if not self.rage[0]:
@@ -705,9 +697,6 @@ class Frankenstein(pygame.sprite.Sprite):
                     del self.way[0]
             else:
                 self.way.append((player.x, player.y))
-        elif (self.rage == 'open_chest' and
-              (self.CHEST_COORDS[0] - self.x == 0) or (self.CHEST_COORDS[1] - self.y == 0)):
-            pass
 
     def change_direction(self, old_dir):
         possible_dir = [('down', 0, 1), ('right', 1, 0), ('up', 0, -1), ('left', -1, 0)]
