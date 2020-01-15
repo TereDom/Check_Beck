@@ -79,7 +79,7 @@ def generate_level(level):
             elif level[y][x] == '!':
                 Tile("empty", x, y)
                 chests[(y, x)] = Chest((x, y))
-                monsters[(x - 1, y - 1)] = random_monster(random.choices(LIST_OF_MONSTERS)[0],
+                monsters[(x - 1, y - 1)] = random_monster('Bat',
                                                           (x - 1, y - 1), (x, y))
             elif level[y][x] == '@':
                 Tile('empty', x, y)
@@ -451,7 +451,12 @@ class Bat(pygame.sprite.Sprite):
         if self.rage[0]:
             if self.way:
                 if self.way[-1] != (player.x, player.y):
-                    self.way.append((player.x, player.y))
+                    if len(self.way) >= 2 and self.way[-2] == (player.x, player.y):
+                        del self.way[-1]
+                        del self.way[-1]
+                    else:
+                        self.way.append((player.x, player.y))
+
                 self.direction = self.change_direction(self.direction)
                 if self.coords != self.way[0]:
                     self.move()
