@@ -14,6 +14,7 @@ inventory_sprites = pygame.sprite.Group()
 all_sprites = pygame.sprite.Group()
 tiles_group = pygame.sprite.Group()
 dark_zones = dict()
+tile_coords = list()
 dark_group = pygame.sprite.Group()
 monsters_group = pygame.sprite.Group()
 
@@ -63,44 +64,78 @@ def generate_level(level):
 
     for y in range(len(level)):
         for x in range(len(level[y])):
-            if level[y][x] == '.':
-                Tile('empty', x, y)
-            elif level[y][x] == '#':
-                Tile('wall', x, y)
-            elif level[y][x] == '!':
-                Tile("empty", x, y)
+            if level[y][x] == '!':
+                tile_coords.append((x * 2, y * 2))
+                Tile("empty", x * 2, y * 2)
                 chests[(y, x)] = Chest((x, y))
                 monsters[(x - 1, y - 1)] = random_monster(random.choices(LIST_OF_MONSTERS)[0],
                                                           (x - 1, y - 1), (x, y))
+                for i in [(x - 1, y - 1), (x, y - 1), (x + 1, y - 1), (x - 1, y), (x + 1 ,y), (x + 1, y - 1),
+                          (x + 1, y), (x + 1, y + 1), (x, y)]:
+                    x_n, y_n = i
+                    dark_zones[x_n * 2, y_n * 2] = Tile('dark', x_n * 2, y_n * 2)
+                    dark_zones[x_n * 2 + 1, y_n * 2] = Tile('dark', x_n * 2 + 1, y_n * 2)
+                    dark_zones[x_n * 2, y_n + 1] = Tile('dark', x_n * 2, y_n + 1)
+                    dark_zones[x_n * 2 + 1, y_n * 2 + 1] = Tile('dark', x_n * 2 + 1, y_n * 2 + 1)
+
             elif level[y][x] == '@':
-                Tile('empty', x, y)
                 player_coords = x, y
+                tile_coords.append((x * 2, y * 2))
+                Tile("empty", x * 2, y * 2)
+                tile_coords.append((x * 2 + 1, y * 2))
+                Tile('empty', x * 2 + 1, y * 2)
+                tile_coords.append((x * 2, y * 2 + 1))
+                Tile('empty', x * 2, y * 2 + 1)
+                tile_coords.append((x * 2 + 1, y * 2 + 1))
+                Tile('empty', x * 2 + 1, y * 2 + 1)
 
             elif level[y][x] == '*':
+                tile_coords.append((x * 2, y * 2))
+                tile_coords.append((x * 2 + 1, y * 2))
+                tile_coords.append((x * 2, y * 2 + 1))
+                tile_coords.append((x * 2 + 1, y * 2 + 1))
                 Tile('door', x, y)
+                dark_zones[x, y] = Tile('dark', x, y)
+                dark_zones[x + 1, y] = Tile('dark', x + 1, y)
+                dark_zones[x, y + 1] = Tile('dark', x, y + 1)
+                dark_zones[x + 1, y + 1] = Tile('dark', x + 1, y + 1)
             load_val += 1
             show_progress(amount_sprites, load_val)
 
-    p_x, p_y = player_coords
-    p_x, p_y = p_x * 2, p_y * 2
-    for y in range(len(level) * 2):
-        for x in range(len(level[0]) * 2):
-            if (x, y) not in [(p_x, p_y - 1), (p_x, p_y - 2), (p_x, p_y + 2), (p_x, p_y + 3),
-                              (p_x + 1, p_y - 1), (p_x + 1, p_y - 2), (p_x + 1, p_y + 2), (p_x + 1, p_y + 3),
-                              (p_x - 2, p_y), (p_x - 1, p_y), (p_x + 2, p_y), (p_x + 3, p_y),
-                              (p_x - 2, p_y + 1), (p_x - 1, p_y + 1), (p_x + 2, p_y + 1), (p_x + 3, p_y + 1),
-                              (p_x - 1, p_y - 1), (p_x - 1, p_y + 2), (p_x + 2, p_y - 1), (p_x + 2, p_y + 2),
-                              (p_x, p_y), (p_x + 1, p_y), (p_x, p_y + 1), (p_x + 1, p_y + 1)]:
-                dark_zones[(x, y)] = Tile('dark', x, y)
-                load_val += 1
-                show_progress(amount_sprites, load_val)
+    gamemap = GameMap(98, 98, load_level('map.txt'))
+
+    update_range(player_coords, gamemap)
 
     gun = FirstWeapon()
     knife = SecondWeapon()
     new_player = Player(*player_coords)
 
-    gamemap = GameMap(98, 98, load_level('map.txt'))
     return gamemap, new_player, x, y, chests, gun, knife, monsters
+
+
+def update_range(player_coords, gm=None):
+    if gm is None:
+        gm = gamemap
+    p_x, p_y = player_coords
+    p_x, p_y = p_x * 2, p_y * 2
+    for y in range(len(gm.map) * 2):
+        for x in range(len(gm.map[0]) * 2):
+            if (x, y) in [(p_x, p_y - 1), (p_x, p_y - 2), (p_x, p_y + 2), (p_x, p_y + 3),
+                          (p_x + 1, p_y - 1), (p_x + 1, p_y - 2), (p_x + 1, p_y + 2), (p_x + 1, p_y + 3),
+                          (p_x - 2, p_y), (p_x - 1, p_y), (p_x + 2, p_y), (p_x + 3, p_y),
+                          (p_x - 2, p_y + 1), (p_x - 1, p_y + 1), (p_x + 2, p_y + 1), (p_x + 3, p_y + 1),
+                          (p_x - 1, p_y - 1), (p_x - 1, p_y + 2), (p_x + 2, p_y - 1), (p_x + 2, p_y + 2),
+                          (p_x, p_y), (p_x + 1, p_y), (p_x, p_y + 1), (p_x + 1, p_y + 1)] and (x, y) not in tile_coords:
+                if gm.map[y // 2][x // 2] == '.':
+                    tile_coords.append((x, y))
+                    Tile('empty', x, y)
+                elif gm.map[y // 2][x // 2] == '#':
+                    tile_coords.append((x, y))
+                    Tile('wall', x, y)
+                elif gm.map[y // 2][x // 2] in ('!', '*'):
+                    if (x, y) in dark_zones.keys():
+                        dark_zones[x, y].kill()
+                        del dark_zones[x, y]
 
 
 def random_monster(name, coords, chest_coords):
@@ -285,12 +320,34 @@ def set_direction_hat(event):
 
 class Tile(pygame.sprite.Sprite):
     def __init__(self, tile_type, pos_x, pos_y):
-        tile_images = {'wall': load_image('wall.png'), 'dark': load_image('dark.png'),
-                       'empty': load_image('floor.png'), 'door': load_image('door.png')}
         super().__init__((all_sprites, tiles_group) if tile_type != 'dark' else dark_group)
-        self.image = tile_images[tile_type]
-        self.rect = self.image.get_rect().move((tile_width if tile_type != 'dark' else tile_width / 2) * pos_x,
-                                               (tile_height if tile_type != 'dark' else tile_height / 2) * pos_y)
+        if tile_type == 'empty':
+            if pos_x % 2 != 0:
+                if pos_y % 2 != 0:
+                    self.image = load_image('floor_down_right.png')
+                else:
+                    self.image = load_image('floor_up_right.png')
+            else:
+                if pos_y % 2 != 0:
+                    self.image = load_image('floor_down_left.png')
+                else:
+                    self.image = load_image('floor_up_left.png')
+
+        if tile_type == 'wall':
+            if pos_y % 2 != 0:
+                self.image = load_image('wall_down.png')
+            else:
+                self.image = load_image('wall_up.png')
+
+        tile_images = {'dark': load_image('dark.png'), 'door': load_image('door.png')}
+
+        if tile_type in tile_images.keys():
+            self.image = tile_images[tile_type]
+        rect = self.image.get_rect().move((tile_width if tile_type not in ('dark', 'wall',
+                                                                                'empty') else tile_width / 2) * pos_x,
+                                               (tile_height if tile_type not in ('dark', 'wall',
+                                                                                 'empty') else tile_height / 2) * pos_y)
+        self.rect = rect
 
 
 class GameMap:
@@ -323,7 +380,7 @@ class Player(pygame.sprite.Sprite):
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
         self.hp = HP
         self.direction = 'down'
-        self.coords = (self.x, self.y)
+        self.coords = self.x, self.y
 
     def update(self, direction):
         x = int(self.x)
@@ -352,16 +409,24 @@ class Player(pygame.sprite.Sprite):
             self.x -= 0.5
             self.image = load_image('Player_left.png')
             self.direction = 'left'
-        x, y = self.x * 2, self.y * 2
-        for i in [(x, y - 1), (x, y - 2), (x, y + 2), (x, y + 3),
-                  (x + 1, y - 1), (x + 1, y - 2), (x + 1, y + 2), (x + 1, y + 3),
-                  (x - 2, y), (x - 1, y), (x + 2, y), (x + 3, y),
-                  (x - 2, y + 1), (x - 1, y + 1), (x + 2, y + 1), (x + 3, y + 1),
-                  (x - 1, y - 1), (x - 1, y + 2), (x + 2, y - 1), (x + 2, y + 2),
-                  (x, y), (x + 1, y), (x, y + 1), (x + 1, y + 1)]:
-            if i in dark_zones.keys():
-                dark_zones[i].kill()
-                del dark_zones[i]
+        self.coords = self.x, self.y
+
+        p_x, p_y = self.x * 2, self.y * 2
+        for i in [(p_x, p_y - 1), (p_x, p_y - 2), (p_x, p_y + 2), (p_x, p_y + 3),
+                  (p_x + 1, p_y - 1), (p_x + 1, p_y - 2), (p_x + 1, p_y + 2), (p_x + 1, p_y + 3),
+                  (p_x - 2, p_y), (p_x - 1, p_y), (p_x + 2, p_y), (p_x + 3, p_y),
+                  (p_x - 2, p_y + 1), (p_x - 1, p_y + 1), (p_x + 2, p_y + 1), (p_x + 3, p_y + 1),
+                  (p_x - 1, p_y - 1), (p_x - 1, p_y + 2), (p_x + 2, p_y - 1), (p_x + 2, p_y + 2),
+                  (p_x, p_y), (p_x + 1, p_y), (p_x, p_y + 1), (p_x + 1, p_y + 1)]:
+            if i not in tile_coords:
+                x, y = i
+                x_n, y_n = int(x // 2), int(y // 2)
+                if gamemap.map[y_n][x_n] == '.':
+                    tile_coords.append((x, y))
+                    Tile('empty', x, y)
+                elif gamemap.map[y_n][x_n] == '#':
+                    tile_coords.append((x, y))
+                    Tile('wall', x, y)
 
         minimap.update_player_coords(int(self.x), int(self.y))
         minimap.draw()
