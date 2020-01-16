@@ -79,7 +79,7 @@ def generate_level(level):
             elif level[y][x] == '!':
                 Tile("empty", x, y)
                 chests[(y, x)] = Chest((x, y))
-                monsters[(x - 1, y - 1)] = random_monster('Bat',
+                monsters[(x - 1, y - 1)] = random_monster('Dragon',
                                                           (x - 1, y - 1), (x, y))
             elif level[y][x] == '@':
                 Tile('empty', x, y)
@@ -343,24 +343,28 @@ class Player(pygame.sprite.Sprite):
             self.y -= 0.5
             self.image = load_image('Player_up.png')
             self.direction = 'up'
+            self.coords = (self.x, self.y)
         elif (direction == 'down' and gamemap.map[y + 1][x] != "#" and
               gamemap.map[y + 1][x + (1 if self.x % 1 != 0 else 0)] != '#'):
             self.rect = self.rect.move(0, 25)
             self.y += 0.5
             self.image = load_image('Player_down.png')
             self.direction = 'down'
+            self.coords = (self.x, self.y)
         elif (direction == 'right' and gamemap.map[y][x + 1] != '#' and
               gamemap.map[y + (1 if self.y % 1 != 0 else 0)][x + 1] != '#'):
             self.rect = self.rect.move(25, 0)
             self.x += 0.5
             self.image = load_image('Player_right.png')
             self.direction = 'right'
+            self.coords = (self.x, self.y)
         elif (direction == 'left' and gamemap.map[y][x + (1 if self.x % 1 != 0 else 0) - 1] != '#' and
               gamemap.map[y + (1 if self.y % 1 != 0 else 0)][x + (1 if self.x % 1 != 0 else 0) - 1] != '#'):
             self.rect = self.rect.move(-25, 0)
             self.x -= 0.5
             self.image = load_image('Player_left.png')
             self.direction = 'left'
+            self.coords = (self.x, self.y)
         x, y = self.x * 2, self.y * 2
         for i in [(x, y - 1), (x, y - 2), (x, y + 2), (x, y + 3),
                   (x + 1, y - 1), (x + 1, y - 2), (x + 1, y + 2), (x + 1, y + 3),
@@ -429,7 +433,7 @@ class Bat(pygame.sprite.Sprite):
         self.CHEST_COORDS = chest_coords
         self.DAMAGE = 5
         self.hp = 20
-        self.attack_radius = 1
+        self.attack_radius = 0.5
         self.coords = coords
         self.x, self.y = self.coords
         self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
@@ -437,6 +441,8 @@ class Bat(pygame.sprite.Sprite):
         self.rage = (False, 'None')
         self.i = 0
         self.way = [self.CHEST_COORDS]
+        self.attack_timer = pygame.time.Clock()
+        self.attack_clock = 0
 
     def update(self, direction):
         if not self.rage[0]:
@@ -457,8 +463,10 @@ class Bat(pygame.sprite.Sprite):
                         del self.way[-1]
                     else:
                         self.way.append((player.x, player.y))
-
                 self.direction = self.change_direction(self.direction)
+                if abs(self.x - player.x) <= self.attack_radius and \
+                        abs(self.y - player.y) <= self.attack_radius:
+                    self.attack()
                 if self.coords != self.way[0]:
                     self.move()
                 else:
@@ -488,11 +496,7 @@ class Bat(pygame.sprite.Sprite):
 
     def move(self):
         del monsters[self.coords]
-        if self.rage[0]:
-            if abs(self.x - player.x) <= self.attack_radius and \
-                    abs(self.y - player.y) <= self.attack_radius:
-                self.attack()
-        self.rect = self.rect.move(self.direction[1] * 25, self.direction[2] * 25)
+        self.rect = self.rect.move(self.direction[1] * tile_width / 2, self.direction[2] * tile_width / 2)
         self.x += self.direction[1] * 0.5
         self.y += self.direction[2] * 0.5
         self.coords = self.x, self.y
@@ -500,7 +504,10 @@ class Bat(pygame.sprite.Sprite):
         monsters[self.coords] = self
 
     def attack(self):
-        player.hp -= self.DAMAGE
+        self.attack_clock += self.attack_timer.tick()
+        if self.attack_clock >= 1000:
+            player.hp -= self.DAMAGE
+            self.attack_clock = 0
 
     def damage(self, type):
         if type == 'bullet':
@@ -520,15 +527,17 @@ class Dragon(pygame.sprite.Sprite):
         self.image = load_image('dragon_down.png')
         self.CHEST_COORDS = chest_coords
         self.DAMAGE = 10
-        self.hp = 40
+        self.hp = 30
+        self.attack_radius = 7
         self.coords = coords
-        self.x, self.y = coords
         self.x, self.y = self.coords
         self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
         self.direction = ('down', 0, 1)
         self.rage = (False, 'None')
         self.i = 0
         self.way = [self.CHEST_COORDS]
+        self.attack_timer = pygame.time.Clock()
+        self.attack_clock = 0
 
     def update(self, direction):
         if not self.rage[0]:
@@ -537,15 +546,22 @@ class Dragon(pygame.sprite.Sprite):
             if self.i == 4:
                 self.direction = self.change_direction(self.direction)
                 self.i = 0
-            if self.hp < 40:
+            if self.hp < 30:
                 self.rage = (True, 'hit')
             elif gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?':
                 self.rage = (True, 'open_chest')
         if self.rage[0]:
             if self.way:
                 if self.way[-1] != (player.x, player.y):
-                    self.way.append((player.x, player.y))
+                    if len(self.way) >= 2 and self.way[-2] == (player.x, player.y):
+                        del self.way[-1]
+                        del self.way[-1]
+                    else:
+                        self.way.append((player.x, player.y))
                 self.direction = self.change_direction(self.direction)
+                if (abs(self.x - player.x) <= self.attack_radius and self.y == player.y) or \
+                        (abs(self.y - player.y) <= self.attack_radius and self.x == player.x):
+                    self.attack()
                 if self.coords != self.way[0]:
                     self.move()
                 else:
@@ -575,7 +591,7 @@ class Dragon(pygame.sprite.Sprite):
 
     def move(self):
         del monsters[self.coords]
-        self.rect = self.rect.move(self.direction[1] * 25, self.direction[2] * 25)
+        self.rect = self.rect.move(self.direction[1] * tile_width / 2, self.direction[2] * tile_width / 2)
         self.x += self.direction[1] * 0.5
         self.y += self.direction[2] * 0.5
         self.coords = self.x, self.y
@@ -592,6 +608,11 @@ class Dragon(pygame.sprite.Sprite):
             self.kill()
         pygame.mixer.music.load('data/damage.mp3')
         pygame.mixer.music.play(1)
+
+    def attack(self):
+        self.attack_clock += self.attack_timer.tick()
+        if self.attack_clock >= 1000:
+            fireball = Bullet(self)
 
 
 class SkeletonBomber(pygame.sprite.Sprite):
@@ -811,49 +832,62 @@ LOOTS_WEIGHTS = [30, 30, 10]
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, master):
         super().__init__(bullet_group, all_sprites)
-        self.image = load_image('Bullet.png')
         self.direction = master.direction
         self.coords = master.x, master.y
         self.x, self.y = self.coords
         self.rect = master.rect
+        self.master = master
         self.dir = {'down': [0, 1], 'right': [1, 0], 'up': [0, -1], 'left': [-1, 0]}
+        if master.__class__.__name__ == "Player":
+            self.image = load_image('Bullet.png')
+            self.speed = 25
+        elif master.__class__.__name__ == 'Dragon':
+            self.image = load_image('frankenstein_down.png')
+            self.speed = 15
 
     def update(self):
         x = int(self.x)
         y = int(self.y)
-
         if (self.direction == 'up' and gamemap.map[y + (1 if self.y % 1 != 0 else 0) - 1][x] != '#' and
                 gamemap.map[y + (1 if self.y % 1 != 0 else 0) - 1][x + (1 if self.x % 1 != 0 else 0)] != '#'):
-            self.rect = self.rect.move(0, -25)
+            self.rect = self.rect.move(0, -self.speed)
             self.y -= 0.5
             self.coords = (x, y)
         elif (self.direction == 'down' and gamemap.map[y + 1][x] != "#" and
               gamemap.map[y + 1][x + (1 if self.x % 1 != 0 else 0)] != '#'):
-            self.rect = self.rect.move(0, 25)
+            self.rect = self.rect.move(0, self.speed)
             self.y += 0.5
             self.coords = (x, y)
         elif (self.direction == 'right' and gamemap.map[y][x + 1] != '#' and
               gamemap.map[y + (1 if self.y % 1 != 0 else 0)][x + 1] != '#'):
-            self.rect = self.rect.move(25, 0)
+            self.rect = self.rect.move(self.speed, 0)
             self.x += 0.5
             self.coords = (x, y)
         elif (self.direction == 'left' and gamemap.map[y][x + (1 if self.x % 1 != 0 else 0) - 1] != '#' and
               gamemap.map[y + (1 if self.y % 1 != 0 else 0)][x + (1 if self.x % 1 != 0 else 0) - 1] != '#'):
-            self.rect = self.rect.move(-25, 0)
+            self.rect = self.rect.move(-self.speed, 0)
             self.x -= 0.5
             self.coords = (x, y)
         else:
             self.kill()
         lst = list(monsters.values())
-        for monster in lst:
-            if not (not (self.coords == monster.coords) and not (
-                    (self.coords[0], self.coords[1] - 0.5) == monster.coords) and not (
-                    (self.coords[0], self.coords[1] + 0.5) == monster.coords) and not (
-                    (self.coords[0] + 0.5, self.coords[1]) == monster.coords) and not (
-                    (self.coords[0] - 0.5, self.coords[1]) == monster.coords)):
-                monster.damage('bullet')
+        if self.master.__class__.__name__ == 'Player':
+            for monster in lst:
+                if not (not (self.coords == monster.coords) and not (
+                        (self.coords[0], self.coords[1] - 0.5) == monster.coords) and not (
+                        (self.coords[0], self.coords[1] + 0.5) == monster.coords) and not (
+                        (self.coords[0] + 0.5, self.coords[1]) == monster.coords) and not (
+                        (self.coords[0] - 0.5, self.coords[1]) == monster.coords)):
+                    monster.damage('bullet')
+                    self.kill()
+        elif self.master.__class__.__name__ == 'Dragon':
+            if not (not (self.coords == player.coords) and not (
+                    (self.coords[0], self.coords[1] - 0.5) == player.coords) and not (
+                    (self.coords[0], self.coords[1] + 0.5) == player.coords) and not (
+                    (self.coords[0] + 0.5, self.coords[1]) == player.coords) and not (
+                    (self.coords[0] - 0.5, self.coords[1]) == player.coords)):
+                player.hp -= self.master.DAMAGE
                 self.kill()
-
 
 
 class MiniMap:
