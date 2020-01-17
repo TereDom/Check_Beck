@@ -79,8 +79,8 @@ def generate_level(level):
             elif level[y][x] == '!':
                 Tile("empty", x, y)
                 chests[(y, x)] = Chest((x, y))
-                monsters[(x - 1, y - 1)] = random_monster('Bat',
-                                                          (x - 1, y - 1), (x, y))
+                monsters[(x - 1, y - 1)] = [random_monster('Dragon',
+                                                          (x - 1, y - 1), (x, y))]
             elif level[y][x] == '@':
                 Tile('empty', x, y)
                 player_coords = x, y
@@ -572,13 +572,25 @@ class Dragon(pygame.sprite.Sprite):
                     return possible_dir[3]
 
     def move(self):
-        del monsters[self.coords]
+        for monster in monsters[self.coords]:
+            if id(self) == id(monster):
+                del monsters[self.coords][monsters[self.coords].index(self)]
+
         self.rect = self.rect.move(self.direction[1] * 25, self.direction[2] * 25)
         self.x += self.direction[1] * 0.5
         self.y += self.direction[2] * 0.5
         self.coords = self.x, self.y
         self.image = load_image('dragon_' + self.direction[0] + '.png')
-        monsters[self.coords] = self
+        if self.coords in monsters.keys():
+            monsters[self.coords].append(self)
+        else:
+            monsters[self.coords] = [self]
+        if monsters[self.coords] == []:
+            del monsters[self.coords]
+
+
+
+
 
     def damage(self, type):
         if type == 'bullet':
@@ -586,10 +598,11 @@ class Dragon(pygame.sprite.Sprite):
         elif type == 'knife':
             self.hp -= 10
         if self.hp <= 0:
-            del monsters[self.coords]
+            del monsters[self.coords][monsters[self.coords].index(self)]
             self.kill()
         pygame.mixer.music.load('data/damage.mp3')
         pygame.mixer.music.play(1)
+        print(monsters)
 
 
 class SkeletonBomber(pygame.sprite.Sprite):
@@ -849,15 +862,15 @@ class Bullet(pygame.sprite.Sprite):
         else:
             self.kill()
         lst = list(monsters.values())
-        for monster in lst:
-            if not (not (self.coords == monster.coords) and not (
-                    (self.coords[0], self.coords[1] - 0.5) == monster.coords) and not (
-                    (self.coords[0], self.coords[1] + 0.5) == monster.coords) and not (
-                    (self.coords[0] + 0.5, self.coords[1]) == monster.coords) and not (
-                    (self.coords[0] - 0.5, self.coords[1]) == monster.coords)):
-                monster.damage('bullet')
-                self.kill()
-
+        for monster_list in lst:
+            for monster in list(monster_list):
+                if not (not (self.coords == monster.coords) and not (
+                        (self.coords[0], self.coords[1] - 0.5) == monster.coords) and not (
+                        (self.coords[0], self.coords[1] + 0.5) == monster.coords) and not (
+                        (self.coords[0] + 0.5, self.coords[1]) == monster.coords) and not (
+                        (self.coords[0] - 0.5, self.coords[1]) == monster.coords)):
+                    monster.damage('bullet')
+                    self.kill()
 
 
 class MiniMap:
