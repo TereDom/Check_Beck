@@ -856,22 +856,22 @@ class Bullet(pygame.sprite.Sprite):
         if (self.direction == 'up' and gamemap.map[y + (1 if self.y % 1 != 0 else 0) - 1][x] != '#' and
                 gamemap.map[y + (1 if self.y % 1 != 0 else 0) - 1][x + (1 if self.x % 1 != 0 else 0)] != '#'):
             self.rect = self.rect.move(0, -self.speed)
-            self.y -= 0.5
+            self.y -= self.speed / 50
             self.coords = (x, y)
         elif (self.direction == 'down' and gamemap.map[y + 1][x] != "#" and
               gamemap.map[y + 1][x + (1 if self.x % 1 != 0 else 0)] != '#'):
             self.rect = self.rect.move(0, self.speed)
-            self.y += 0.5
+            self.y += self.speed / 50
             self.coords = (x, y)
         elif (self.direction == 'right' and gamemap.map[y][x + 1] != '#' and
               gamemap.map[y + (1 if self.y % 1 != 0 else 0)][x + 1] != '#'):
             self.rect = self.rect.move(self.speed, 0)
-            self.x += 0.5
+            self.x += self.speed / 50
             self.coords = (x, y)
         elif (self.direction == 'left' and gamemap.map[y][x + (1 if self.x % 1 != 0 else 0) - 1] != '#' and
               gamemap.map[y + (1 if self.y % 1 != 0 else 0)][x + (1 if self.x % 1 != 0 else 0) - 1] != '#'):
             self.rect = self.rect.move(-self.speed, 0)
-            self.x -= 0.5
+            self.x -= self.speed / 50
             self.coords = (x, y)
         else:
             self.kill()
@@ -936,7 +936,6 @@ class MiniMap:
                                                             self.cell_size, self.cell_size), 0)
 
 
-
 class Chest(pygame.sprite.Sprite):
     def __init__(self, coords):
         super().__init__(all_sprites)
@@ -956,9 +955,9 @@ class Chest(pygame.sprite.Sprite):
 
     def open_chest(self):
         global chests_found
-        if self.loot_name == 'Ammo':
+        if self.loot_name.__class__.__name__ == 'Ammo':
             pygame.mixer.music.load("data/music/ammo_picked.mp3")
-        elif self.loot_name == "Key":
+        elif self.loot_name.__class__.__name__ == "Key":
             pygame.mixer.music.load('data/music/key_picked.mp3')
         else:
             pygame.mixer.music.load("data/music/potion_picked.mp3")
