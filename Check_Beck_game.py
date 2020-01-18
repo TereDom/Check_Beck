@@ -52,8 +52,11 @@ def show_progress(setMax, setVal):
     # pygame.display.flip()
 
 
-def load_image(name, colorkey=None):
-    fullname = os.path.join('data', name)
+def load_image(name, subfolder=None, colorkey=None):
+    if subfolder is not None:
+        fullname = os.path.join('data', subfolder, name)
+    else:
+        fullname = os.path.join('data', name)
     image = pygame.image.load(fullname).convert_alpha()
     return image
 
@@ -328,7 +331,7 @@ class Player(pygame.sprite.Sprite):
         self.active_weapon = 1
         self.inventory = {'Ammo': 15, 'Potion': 0, 'Key': 0}
         self.x, self.y = pos_x, pos_y
-        self.image = load_image('Player_down.png')
+        self.image = load_image('Player_down.png', 'player')
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
         self.hp = HP
         self.direction = 'down'
@@ -341,28 +344,28 @@ class Player(pygame.sprite.Sprite):
                 gamemap.map[y + (1 if self.y % 1 != 0 else 0) - 1][x + (1 if self.x % 1 != 0 else 0)] != '#'):
             self.rect = self.rect.move(0, -25)
             self.y -= 0.5
-            self.image = load_image('Player_up.png')
+            self.image = load_image('Player_up.png', 'player')
             self.direction = 'up'
             self.coords = (self.x, self.y)
         elif (direction == 'down' and gamemap.map[y + 1][x] != "#" and
               gamemap.map[y + 1][x + (1 if self.x % 1 != 0 else 0)] != '#'):
             self.rect = self.rect.move(0, 25)
             self.y += 0.5
-            self.image = load_image('Player_down.png')
+            self.image = load_image('Player_down.png', 'player')
             self.direction = 'down'
             self.coords = (self.x, self.y)
         elif (direction == 'right' and gamemap.map[y][x + 1] != '#' and
               gamemap.map[y + (1 if self.y % 1 != 0 else 0)][x + 1] != '#'):
             self.rect = self.rect.move(25, 0)
             self.x += 0.5
-            self.image = load_image('Player_right.png')
+            self.image = load_image('Player_right.png', 'player')
             self.direction = 'right'
             self.coords = (self.x, self.y)
         elif (direction == 'left' and gamemap.map[y][x + (1 if self.x % 1 != 0 else 0) - 1] != '#' and
               gamemap.map[y + (1 if self.y % 1 != 0 else 0)][x + (1 if self.x % 1 != 0 else 0) - 1] != '#'):
             self.rect = self.rect.move(-25, 0)
             self.x -= 0.5
-            self.image = load_image('Player_left.png')
+            self.image = load_image('Player_left.png', 'player')
             self.direction = 'left'
             self.coords = (self.x, self.y)
         x, y = self.x * 2, self.y * 2
@@ -382,31 +385,31 @@ class Player(pygame.sprite.Sprite):
     def update_direction(self, direction):
         self.direction = direction
         if direction == 'up':
-            self.image = load_image("Player_up.png")
+            self.image = load_image("Player_up.png", 'player')
         elif direction == 'down':
-            self.image = load_image("Player_down.png")
+            self.image = load_image("Player_down.png", 'player')
         elif direction == 'left':
-            self.image = load_image('Player_left.png')
+            self.image = load_image('Player_left.png', 'player')
         elif direction == 'right':
-            self.image = load_image('Player_right.png')
+            self.image = load_image('Player_right.png', 'player')
 
     def hit(self):
         if self.active_weapon == 1:
             if player.inventory['Ammo']:
-                pygame.mixer.music.load("data/shot.mp3")
+                pygame.mixer.music.load("data/music/shot.mp3")
                 pygame.mixer.music.play(1)
                 player.inventory['Ammo'] -= 1
                 bul = Bullet(player)
             elif not player.inventory['Ammo']:
-                pygame.mixer.music.load("data/noAmmo_shot.mp3")
+                pygame.mixer.music.load("data/music/noAmmo_shot.mp3")
                 pygame.mixer.music.play(1)
         elif self.active_weapon == 2:
-            pygame.mixer.music.load("data/hit.mp3")
+            pygame.mixer.music.load("data/music/hit.mp3")
             pygame.mixer.music.play(1)
 
     def heal(self):
         if player.inventory['Potion'] and self.hp < HP:
-            pygame.mixer.music.load('data/heal.mp3')
+            pygame.mixer.music.load('data/music/heal.mp3')
             pygame.mixer.music.play(1)
             player.hp = HP if self.hp + 10 > HP else self.hp + 10
             player.inventory['Potion'] -= 1
@@ -429,7 +432,7 @@ class Camera:
 class Bat(pygame.sprite.Sprite):
     def __init__(self, coords, chest_coords):
         super().__init__(all_sprites, monsters_group, creatures_group)
-        self.image = load_image('bat_down.png')
+        self.image = load_image('bat_down.png', 'bat')
         self.CHEST_COORDS = chest_coords
         self.DAMAGE = 5
         self.hp = 20
@@ -500,7 +503,7 @@ class Bat(pygame.sprite.Sprite):
         self.x += self.direction[1] * 0.5
         self.y += self.direction[2] * 0.5
         self.coords = self.x, self.y
-        self.image = load_image('bat_' + self.direction[0] + '.png')
+        self.image = load_image('bat_' + self.direction[0] + '.png', 'bat')
         monsters[self.coords] = self
 
     def attack(self):
@@ -517,14 +520,14 @@ class Bat(pygame.sprite.Sprite):
         if self.hp <= 0:
             del monsters[self.coords]
             self.kill()
-        pygame.mixer.music.load('data/damage.mp3')
+        pygame.mixer.music.load('data/music/damage.mp3')
         pygame.mixer.music.play(1)
 
 
 class Dragon(pygame.sprite.Sprite):
     def __init__(self, coords, chest_coords):
         super().__init__(all_sprites, monsters_group, creatures_group)
-        self.image = load_image('dragon_down.png')
+        self.image = load_image('dragon_down.png', 'dragon')
         self.CHEST_COORDS = chest_coords
         self.DAMAGE = 10
         self.hp = 30
@@ -559,11 +562,11 @@ class Dragon(pygame.sprite.Sprite):
                     else:
                         self.way.append((player.x, player.y))
                 self.direction = self.change_direction(self.direction)
-                if (abs(self.x - player.x) <= self.attack_radius and self.y == player.y) or \
-                        (abs(self.y - player.y) <= self.attack_radius and self.x == player.x):
-                    self.attack()
                 if self.coords != self.way[0]:
                     self.move()
+                    if (abs(self.x - player.x) <= self.attack_radius and self.y == player.y) or \
+                            (abs(self.y - player.y) <= self.attack_radius and self.x == player.x):
+                        self.attack()
                 else:
                     del self.way[0]
             else:
@@ -595,7 +598,7 @@ class Dragon(pygame.sprite.Sprite):
         self.x += self.direction[1] * 0.5
         self.y += self.direction[2] * 0.5
         self.coords = self.x, self.y
-        self.image = load_image('dragon_' + self.direction[0] + '.png')
+        self.image = load_image('dragon_' + self.direction[0] + '.png', 'dragon')
         monsters[self.coords] = self
 
     def damage(self, type):
@@ -606,19 +609,20 @@ class Dragon(pygame.sprite.Sprite):
         if self.hp <= 0:
             del monsters[self.coords]
             self.kill()
-        pygame.mixer.music.load('data/damage.mp3')
+        pygame.mixer.music.load('data/music/damage.mp3')
         pygame.mixer.music.play(1)
 
     def attack(self):
         self.attack_clock += self.attack_timer.tick()
         if self.attack_clock >= 1000:
             fireball = Bullet(self)
+            self.attack_clock = 0
 
 
 class SkeletonBomber(pygame.sprite.Sprite):
     def __init__(self, coords, chest_coords):
         super().__init__(all_sprites, monsters_group, creatures_group)
-        self.image = load_image('skeleton_down.png')
+        self.image = load_image('skeleton_down.png', 'skeleton')
         self.CHEST_COORDS = chest_coords
         self.DAMAGE = 25
         self.hp = 10
@@ -679,7 +683,7 @@ class SkeletonBomber(pygame.sprite.Sprite):
         self.x += self.direction[1]
         self.y += self.direction[2]
         self.coords = self.x, self.y
-        self.image = load_image('skeleton_' + self.direction[0] + '.png')
+        self.image = load_image('skeleton_' + self.direction[0] + '.png', 'skeleton')
         monsters[self.coords] = self
 
     def damage(self, type):
@@ -690,14 +694,14 @@ class SkeletonBomber(pygame.sprite.Sprite):
         if self.hp <= 0:
             del monsters[self.coords]
             self.kill()
-        pygame.mixer.music.load('data/damage.mp3')
+        pygame.mixer.music.load('data/music/damage.mp3')
         pygame.mixer.music.play(1)
 
 
 class Frankenstein(pygame.sprite.Sprite):
     def __init__(self, coords, chest_coords):
         super().__init__(all_sprites, monsters_group, creatures_group)
-        self.image = load_image('frankenstein_down.png')
+        self.image = load_image('frankenstein_down.png', 'frankenstein')
         self.CHEST_COORDS = chest_coords
         self.hp = 75
         self.DAMAGE = 15
@@ -758,7 +762,7 @@ class Frankenstein(pygame.sprite.Sprite):
         self.x += self.direction[1] * 0.5
         self.y += self.direction[2] * 0.5
         self.coords = self.x, self.y
-        self.image = load_image('frankenstein_' + self.direction[0] + '.png')
+        self.image = load_image('frankenstein_' + self.direction[0] + '.png', 'frankenstein')
         monsters[self.coords] = self
 
     def damage(self, type):
@@ -769,7 +773,7 @@ class Frankenstein(pygame.sprite.Sprite):
         if self.hp <= 0:
             del monsters[self.coords]
             self.kill()
-        pygame.mixer.music.load('data/damage.mp3')
+        pygame.mixer.music.load('data/music/damage.mp3')
         pygame.mixer.music.play(1)
 
 
@@ -777,7 +781,7 @@ class Potion(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(inventory_sprites, chest_group)
         self.type = 'Potion'
-        self.image = load_image('potion.png')
+        self.image = load_image('potion.png', 'items')
         self.rect = (inventory.x + ((inventory.width - int(inventory.width * 0.88)) // 2), height * 0.30)
 
     def update(self):
@@ -788,7 +792,7 @@ class Key(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(inventory_sprites, chest_group)
         self.type = 'Key'
-        self.image = load_image('key.png')
+        self.image = load_image('key.png', 'items')
         self.rect = (inventory.x + ((inventory.width - int(inventory.width * 0.88)) // 2)
                      + int(inventory.width * 0.88) - 55, height * 0.30)
 
@@ -800,7 +804,7 @@ class Ammo(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(inventory_sprites, chest_group)
         self.type = 'Ammo'
-        self.image = load_image('ammo.png')
+        self.image = load_image('ammo.png', 'items')
         self.rect = (inventory.x + ((inventory.width - int(inventory.width * 0.88)) // 2), height * 0.47)
 
     def update(self):
@@ -810,7 +814,7 @@ class Ammo(pygame.sprite.Sprite):
 class FirstWeapon(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(inventory_sprites, weapons_group)
-        self.image = load_image('gun.png')
+        self.image = load_image('gun.png', 'items')
         self.rect = (inventory.x + ((inventory.width - int(inventory.width * 0.88)) // 2)
                      + (int(inventory.width * 0.88) - 55 * 2) // 4, height * 0.14)
 
@@ -818,7 +822,7 @@ class FirstWeapon(pygame.sprite.Sprite):
 class SecondWeapon(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(inventory_sprites, weapons_group)
-        self.image = load_image('knife.png')
+        self.image = load_image('knife.png', 'items')
         self.rect = (inventory.x + ((inventory.width - int(inventory.width * 0.88)) // 2)
                      + int(inventory.width * 0.88) - (int(inventory.width * 0.88)
                                                       - 55 * 2) // 4 - 55, height * 0.14)
@@ -832,18 +836,19 @@ LOOTS_WEIGHTS = [30, 30, 10]
 class Bullet(pygame.sprite.Sprite):
     def __init__(self, master):
         super().__init__(bullet_group, all_sprites)
-        self.direction = master.direction
         self.coords = master.x, master.y
         self.x, self.y = self.coords
         self.rect = master.rect
         self.master = master
         self.dir = {'down': [0, 1], 'right': [1, 0], 'up': [0, -1], 'left': [-1, 0]}
         if master.__class__.__name__ == "Player":
-            self.image = load_image('Bullet.png')
+            self.image = load_image('bullet.png', 'items')
             self.speed = 25
+            self.direction = player.direction
         elif master.__class__.__name__ == 'Dragon':
-            self.image = load_image('frankenstein_down.png')
-            self.speed = 15
+            self.direction = master.direction[0]
+            self.image = load_image(f'fireball_{self.direction}.png', 'items')
+            self.speed = 10
 
     def update(self):
         x = int(self.x)
@@ -952,17 +957,17 @@ class Chest(pygame.sprite.Sprite):
     def open_chest(self):
         global chests_found
         if self.loot_name == 'Ammo':
-            pygame.mixer.music.load("data/ammo_picked.mp3")
+            pygame.mixer.music.load("data/music/ammo_picked.mp3")
         elif self.loot_name == "Key":
-            pygame.mixer.music.load('data/key_picked.mp3')
+            pygame.mixer.music.load('data/music/key_picked.mp3')
         else:
-            pygame.mixer.music.load("data/potion_picked.mp3")
+            pygame.mixer.music.load("data/music/potion_picked.mp3")
         self.image = load_image('open_chest.png')
         pygame.mixer.music.play(1)
         chests_found += 1
 
 
-player_image = load_image('Player_down.png')
+player_image = load_image('Player_down.png', 'player')
 gamemap, player, level_x, level_y, chests, gun, knife, monsters = generate_level(load_level('map.txt'))
 
 minimap = MiniMap(len(gamemap.map), len(gamemap.map[0]), inventory.get_minimap_coords(), 2, (player.x, player.y))
