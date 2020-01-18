@@ -27,6 +27,16 @@ HP = 50
 screen = pygame.display.set_mode(size)
 amount_sprites = 47996
 
+shoot_sound = pygame.mixer.Sound("data/music/shot.wav")
+noAmmo_shoot_sound = pygame.mixer.Sound("data/music/noAmmo_shot.wav")
+hit_sound = pygame.mixer.Sound("data/music/hit.wav")
+damage_sound = pygame.mixer.Sound('data/music/damage.wav')
+heal_sound = pygame.mixer.Sound('data/music/heal.wav')
+bat_hit_sound = pygame.mixer.Sound('data/music/bat_hit.wav')
+dragon_shoot_fireball_sound = pygame.mixer.Sound('data/music/dragon_shoot_fireball.wav')
+ammo_picked_sound = pygame.mixer.Sound("data/music/ammo_picked.wav")
+key_picked_sound = pygame.mixer.Sound('data/music/key_picked.wav')
+potion_picked_sound = pygame.mixer.Sound("data/music/potion_picked.wav")
 
 def show_progress(setMax, setVal):
     # Всего процентов
@@ -407,13 +417,11 @@ class Player(pygame.sprite.Sprite):
     def hit(self):
         if self.active_weapon == 1:
             if player.inventory['Ammo']:
-                pygame.mixer.music.load("data/music/shot.mp3")
-                pygame.mixer.music.play(1)
+                shoot_sound.play()
                 player.inventory['Ammo'] -= 1
                 bul = Bullet(player)
             elif not player.inventory['Ammo']:
-                pygame.mixer.music.load("data/music/noAmmo_shot.mp3")
-                pygame.mixer.music.play(1)
+                noAmmo_shoot_sound.play()
         elif self.active_weapon == 2:
             hit_dir = {'down': [0, 1], 'right': [1, 0], 'up': [0, -1], 'left': [-1, 0]}
             lst = list(monsters.values())
@@ -422,14 +430,11 @@ class Player(pygame.sprite.Sprite):
                         self.coords[1] + hit_dir[self.direction][1] == monster.coords[1]) or\
                         self.coords == monster.coords:
                     monster.damage('knife')
-                    print("заточку в почку")
-            pygame.mixer.music.load("data/music/hit.mp3")
-            pygame.mixer.music.play(1)
+            hit_sound.play()
 
     def heal(self):
         if player.inventory['Potion'] and self.hp < HP:
-            pygame.mixer.music.load('data/music/heal.mp3')
-            pygame.mixer.music.play(1)
+            heal_sound.play()
             player.hp = HP if self.hp + 10 > HP else self.hp + 10
             player.inventory['Potion'] -= 1
 
@@ -460,7 +465,7 @@ class Bat(pygame.sprite.Sprite):
         self.x, self.y = self.coords
         self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
         self.direction = ('down', 0, 1)
-        self.rage = (False, 'None')
+        self.rage = False
         self.i = 0
         self.way = [self.CHEST_COORDS]
         self.attack_timer = pygame.time.Clock()
@@ -468,17 +473,15 @@ class Bat(pygame.sprite.Sprite):
         self.walk_animation = 1
 
     def update(self, direction):
-        if not self.rage[0]:
+        if not self.rage:
             self.move()
             self.i += 1
             if self.i == 4:
                 self.direction = self.change_direction(self.direction)
                 self.i = 0
-            if self.hp < 20:
-                self.rage = (True, 'hit')
-            elif gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?':
-                self.rage = (True, 'open_chest')
-        if self.rage[0]:
+            if (self.hp < 20) or (gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?'):
+                self.rage = True
+        if self.rage:
             if self.way:
                 if self.way[-1] != (player.x, player.y):
                     if len(self.way) >= 2 and self.way[-2] == (player.x, player.y):
@@ -498,11 +501,11 @@ class Bat(pygame.sprite.Sprite):
 
     def change_direction(self, old_dir):
         possible_dir = [('down', 0, 1), ('right', 1, 0), ('up', 0, -1), ('left', -1, 0)]
-        if not self.rage[0]:
+        if not self.rage:
             new_dir = possible_dir.index(old_dir) + 1
             new_dir = possible_dir[new_dir if new_dir != len(possible_dir) else 0]
             return new_dir
-        elif self.rage[0]:
+        elif self.rage:
             y_changed = self.way[0][1] - self.y
             x_changed = self.way[0][0] - self.x
             if y_changed != 0:
@@ -531,6 +534,7 @@ class Bat(pygame.sprite.Sprite):
         if self.attack_clock >= 1000:
             player.hp -= self.DAMAGE
             self.attack_clock = 0
+            bat_hit_sound.play()
 
     def damage(self, type):
         if type == 'bullet':
@@ -540,8 +544,7 @@ class Bat(pygame.sprite.Sprite):
         if self.hp <= 0:
             del monsters[self.coords]
             self.kill()
-        pygame.mixer.music.load('data/music/damage.mp3')
-        pygame.mixer.music.play(1)
+        damage_sound.play()
 
 
 class Dragon(pygame.sprite.Sprite):
@@ -556,7 +559,7 @@ class Dragon(pygame.sprite.Sprite):
         self.x, self.y = self.coords
         self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
         self.direction = ('down', 0, 1)
-        self.rage = (False, 'None')
+        self.rage = False
         self.i = 0
         self.way = [self.CHEST_COORDS]
         self.attack_timer = pygame.time.Clock()
@@ -564,17 +567,15 @@ class Dragon(pygame.sprite.Sprite):
         self.walk_animation = 1
 
     def update(self, direction):
-        if not self.rage[0]:
+        if not self.rage:
             self.move()
             self.i += 1
             if self.i == 4:
                 self.direction = self.change_direction(self.direction)
                 self.i = 0
-            if self.hp < 30:
-                self.rage = (True, 'hit')
-            elif gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?':
-                self.rage = (True, 'open_chest')
-        if self.rage[0]:
+            if (self.hp < 30) or (gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?'):
+                self.rage = True
+        if self.rage:
             if self.way:
                 if self.way[-1] != (player.x, player.y):
                     if len(self.way) >= 2 and self.way[-2] == (player.x, player.y):
@@ -594,11 +595,11 @@ class Dragon(pygame.sprite.Sprite):
 
     def change_direction(self, old_dir):
         possible_dir = [('down', 0, 1), ('right', 1, 0), ('up', 0, -1), ('left', -1, 0)]
-        if not self.rage[0]:
+        if not self.rage:
             new_dir = possible_dir.index(old_dir) + 1
             new_dir = possible_dir[new_dir if new_dir != len(possible_dir) else 0]
             return new_dir
-        elif self.rage[0]:
+        elif self.rage:
             y_changed = self.way[0][1] - self.y
             x_changed = self.way[0][0] - self.x
             if y_changed != 0:
@@ -631,13 +632,13 @@ class Dragon(pygame.sprite.Sprite):
         if self.hp <= 0:
             del monsters[self.coords]
             self.kill()
-        pygame.mixer.music.load('data/music/damage.mp3')
-        pygame.mixer.music.play(1)
+        damage_sound.play()
 
     def attack(self):
         self.attack_clock += self.attack_timer.tick()
-        if self.attack_clock >= 1000:
+        if self.attack_clock >= 2500:
             fireball = Bullet(self)
+            dragon_shoot_fireball_sound.play()
             self.attack_clock = 0
 
 
@@ -653,7 +654,7 @@ class SkeletonBomber(pygame.sprite.Sprite):
         self.x, self.y = self.coords
         self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
         self.direction = ('down', 0, 1)
-        self.rage = (False, 'None')
+        self.rage = False
         self.i = 0
         self.way = [self.CHEST_COORDS]
         self.walk_animation = 1
@@ -661,17 +662,15 @@ class SkeletonBomber(pygame.sprite.Sprite):
         self.attack_clock = 0
 
     def update(self, direction):
-        if not self.rage[0]:
+        if not self.rage:
             self.move()
             self.i += 1
             if self.i == 2:
                 self.direction = self.change_direction(self.direction)
                 self.i = 0
-            if self.hp < 10:
-                self.rage = (True, 'hit')
-            elif gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?':
-                self.rage = (True, 'open_chest')
-        if self.rage[0]:
+            if (self.hp < 10) or (gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?'):
+                self.rage = True
+        if self.rage:
             if self.way:
                 if self.way[-1] != (player.x, player.y):
                     if len(self.way) >= 2 and self.way[-2] == (player.x, player.y):
@@ -691,11 +690,11 @@ class SkeletonBomber(pygame.sprite.Sprite):
 
     def change_direction(self, old_dir):
         possible_dir = [('down', 0, 1), ('right', 1, 0), ('up', 0, -1), ('left', -1, 0)]
-        if not self.rage[0]:
+        if not self.rage:
             new_dir = possible_dir.index(old_dir) + 1
             new_dir = possible_dir[new_dir if new_dir != len(possible_dir) else 0]
             return new_dir
-        elif self.rage[0]:
+        elif self.rage:
             y_changed = self.way[0][1] - self.y
             x_changed = self.way[0][0] - self.x
             if y_changed != 0:
@@ -728,8 +727,7 @@ class SkeletonBomber(pygame.sprite.Sprite):
         if self.hp <= 0:
             del monsters[self.coords]
             self.kill()
-        pygame.mixer.music.load('data/music/damage.mp3')
-        pygame.mixer.music.play(1)
+        damage_sound.play()
 
     def attack(self):
         self.attack_clock += self.attack_timer.tick()
@@ -750,7 +748,7 @@ class Frankenstein(pygame.sprite.Sprite):
         self.x, self.y = self.coords
         self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
         self.direction = ('down', 0, 1)
-        self.rage = (False, 'None')
+        self.rage = False
         self.i = 0
         self.way = [self.CHEST_COORDS]
         self.walk_animation = 1
@@ -758,17 +756,15 @@ class Frankenstein(pygame.sprite.Sprite):
         self.attack_clock = 0
 
     def update(self, direction):
-        if not self.rage[0]:
+        if not self.rage:
             self.move()
             self.i += 1
             if self.i == 8:
                 self.direction = self.change_direction(self.direction)
                 self.i = 0
-            if self.hp < 75:
-                self.rage = (True, 'hit')
-            elif gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?':
-                self.rage = (True, 'open_chest')
-        if self.rage[0]:
+            if (self.hp < 75) or (gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?'):
+                self.rage = True
+        if self.rage:
             if self.way:
                 if self.way[-1] != (player.x, player.y):
                     if len(self.way) >= 2 and self.way[-2] == (player.x, player.y):
@@ -788,11 +784,11 @@ class Frankenstein(pygame.sprite.Sprite):
 
     def change_direction(self, old_dir):
         possible_dir = [('down', 0, 1), ('right', 1, 0), ('up', 0, -1), ('left', -1, 0)]
-        if not self.rage[0]:
+        if not self.rage:
             new_dir = possible_dir.index(old_dir) + 1
             new_dir = possible_dir[new_dir if new_dir != len(possible_dir) else 0]
             return new_dir
-        elif self.rage[0]:
+        elif self.rage:
             y_changed = self.way[0][1] - self.y
             x_changed = self.way[0][0] - self.x
             if y_changed != 0:
@@ -825,8 +821,7 @@ class Frankenstein(pygame.sprite.Sprite):
         if self.hp <= 0:
             del monsters[self.coords]
             self.kill()
-        pygame.mixer.music.load('data/music/damage.mp3')
-        pygame.mixer.music.play(1)
+        damage_sound.play()
 
     def attack(self):
         self.attack_clock += self.attack_timer.tick()
@@ -1014,13 +1009,12 @@ class Chest(pygame.sprite.Sprite):
     def open_chest(self):
         global chests_found
         if self.loot_name.__class__.__name__ == 'Ammo':
-            pygame.mixer.music.load("data/music/ammo_picked.mp3")
+            ammo_picked_sound.play()
         elif self.loot_name.__class__.__name__ == "Key":
-            pygame.mixer.music.load('data/music/key_picked.mp3')
+            key_picked_sound.play()
         else:
-            pygame.mixer.music.load("data/music/potion_picked.mp3")
+            potion_picked_sound.play()
         self.image = load_image('open_chest.png')
-        pygame.mixer.music.play(1)
         chests_found += 1
 
 
@@ -1050,6 +1044,8 @@ running = True
 move = False
 direction = None
 flag = True
+pygame.mixer.music.load('data/music/background.mp3')
+pygame.mixer.music.play(-1)
 
 while running:
     screen.fill(pygame.color.Color("black"))
@@ -1125,7 +1121,6 @@ while running:
     for sprite in dark_group:
         camera.apply(sprite)
 
-    gamemap.render()
     all_sprites.draw(screen)
     monsters_group.draw(screen)
     dark_group.draw(screen)
