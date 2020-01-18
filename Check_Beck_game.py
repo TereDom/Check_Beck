@@ -3,7 +3,6 @@ import os
 import random
 import sys
 
-
 pygame.init()
 
 bullet_group = pygame.sprite.Group()
@@ -404,6 +403,14 @@ class Player(pygame.sprite.Sprite):
                 pygame.mixer.music.load("data/music/noAmmo_shot.mp3")
                 pygame.mixer.music.play(1)
         elif self.active_weapon == 2:
+            hit_dir = {'down': [0, 1], 'right': [1, 0], 'up': [0, -1], 'left': [-1, 0]}
+            lst = list(monsters.values())
+            for monster in lst:
+                if (self.coords[0] + hit_dir[self.direction][0] == monster.coords[0] and
+                        self.coords[1] + hit_dir[self.direction][1] == monster.coords[1]) or\
+                        self.coords == monster.coords:
+                    monster.damage('knife')
+                    print("заточку в почку")
             pygame.mixer.music.load("data/music/hit.mp3")
             pygame.mixer.music.play(1)
 
@@ -932,8 +939,8 @@ class MiniMap:
                 else:
                     pygame.draw.rect(
                         screen, pygame.color.Color('black'), (self.x + x * self.cell_size,
-                                                            self.y + y * self.cell_size,
-                                                            self.cell_size, self.cell_size), 0)
+                                                              self.y + y * self.cell_size,
+                                                              self.cell_size, self.cell_size), 0)
 
 
 class Chest(pygame.sprite.Sprite):
