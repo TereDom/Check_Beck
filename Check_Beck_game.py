@@ -15,6 +15,7 @@ tiles_group = pygame.sprite.Group()
 dark_zones = dict()
 dark_group = pygame.sprite.Group()
 monsters_group = pygame.sprite.Group()
+helpful_images_group = pygame.sprite.Group()
 
 LIST_OF_MONSTERS = ['Frankenstein', 'Bat', 'Dragon', 'SkeletonBomber']
 
@@ -1030,6 +1031,13 @@ class Chest(pygame.sprite.Sprite):
         chests_found += 1
 
 
+class HelpfulImages(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(helpful_images_group)
+        self.image = load_image('control.png')
+        self.rect = self.image.get_rect().move(0, -50)
+
+
 player_image = load_image('Player_down.png', 'player')
 gamemap, player, level_x, level_y, chests, gun, knife, monsters = generate_level(load_level('map.txt'))
 
@@ -1058,6 +1066,8 @@ direction = None
 flag = True
 pygame.mixer.music.load('data/music/background.mp3')
 pygame.mixer.music.play(-1)
+game_paused = False
+helpful_images = HelpfulImages()
 
 while running:
     screen.fill(pygame.color.Color("black"))
@@ -1098,7 +1108,8 @@ while running:
                 player.hit()
             if event.key == pygame.K_ESCAPE:
                 running = False
-
+            if event.key == pygame.K_F1:
+                game_paused = True if not game_paused else False
         if (event.type == pygame.KEYUP or event.type == pygame.KEYDOWN) and \
                 event.key in [pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d]:
             direction, move = set_direction_wasd(event)
@@ -1133,12 +1144,17 @@ while running:
     for sprite in dark_group:
         camera.apply(sprite)
 
-    all_sprites.draw(screen)
-    monsters_group.draw(screen)
-    dark_group.draw(screen)
+    if not game_paused:
+        all_sprites.draw(screen)
+        monsters_group.draw(screen)
+        dark_group.draw(screen)
 
-    inventory.upgrade()
-    minimap.draw()
+        inventory.upgrade()
+        minimap.draw()
+
+    if game_paused:
+        helpful_images_group.draw(screen)
+
     pygame.display.flip()
 
 if stick is not None:
