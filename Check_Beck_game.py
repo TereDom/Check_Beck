@@ -1110,6 +1110,10 @@ while running:
                     running = False
                 if event.key == pygame.K_F1:
                     game_paused = True if not game_paused else False
+                if 'Key' in player.inventory.keys():
+                    if event.key == pygame.K_4 and gamemap.map[int(player.y) + 1][int(player.x)] == '*':
+                        player.inventory['Key'] -= 1
+                        door.open()
             if (event.type == pygame.KEYUP or event.type == pygame.KEYDOWN) and \
                     event.key in [pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d]:
                 direction, move = set_direction_wasd(event)
