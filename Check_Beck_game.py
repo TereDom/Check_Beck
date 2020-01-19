@@ -94,7 +94,7 @@ def generate_level(level):
             elif level[y][x] == '!':
                 Tile("empty", x, y)
                 chests[(y, x)] = Chest((x, y))
-                monsters[(x - 1, y - 1)] = random_monster('SkeletonBomber',
+                monsters[(x - 1, y - 1)] = random_monster(random.choices(LIST_OF_MONSTERS)[0],
                                                           (x - 1, y - 1), (x, y))
             elif level[y][x] == '@':
                 Tile('empty', x, y)
@@ -104,20 +104,6 @@ def generate_level(level):
                 Tile('door', x, y)
             load_val += 1
             show_progress(amount_sprites, load_val)
-
-    # p_x, p_y = player_coords
-    # p_x, p_y = p_x * 2, p_y * 2
-    # for y in range(len(level) * 2):
-    #    for x in range(len(level[0]) * 2):
-    #        if (x, y) not in [(p_x, p_y - 1), (p_x, p_y - 2), (p_x, p_y + 2), (p_x, p_y + 3),
-    #                          (p_x + 1, p_y - 1), (p_x + 1, p_y - 2), (p_x + 1, p_y + 2), (p_x + 1, p_y + 3),
-    #                          (p_x - 2, p_y), (p_x - 1, p_y), (p_x + 2, p_y), (p_x + 3, p_y),
-    #                          (p_x - 2, p_y + 1), (p_x - 1, p_y + 1), (p_x + 2, p_y + 1), (p_x + 3, p_y + 1),
-    #                          (p_x - 1, p_y - 1), (p_x - 1, p_y + 2), (p_x + 2, p_y - 1), (p_x + 2, p_y + 2),
-    #                          (p_x, p_y), (p_x + 1, p_y), (p_x, p_y + 1), (p_x + 1, p_y + 1)]:
-    #            dark_zones[(x, y)] = Tile('dark', x, y)
-    #            load_val += 1
-    #            show_progress(amount_sprites, load_val)
 
     gun = FirstWeapon()
     knife = SecondWeapon()
@@ -641,7 +627,6 @@ class Dragon(pygame.sprite.Sprite):
 
     def attack(self):
         self.attack_clock += self.attack_timer.tick()
-        print(self.attack_clock)
         if self.attack_clock >= 2500:
             fireball = Bullet(self)
             dragon_shoot_fireball_sound.play()
@@ -699,7 +684,6 @@ class SkeletonBomber(pygame.sprite.Sprite):
                 else:
                     self.way.append((int(player.x), int(player.y)))
         if self.is_boom:
-            print(self.boom_clock)
             self.boom()
 
     def change_direction(self, old_dir):
@@ -754,7 +738,6 @@ class SkeletonBomber(pygame.sprite.Sprite):
             self.is_boom = True
 
     def boom(self):
-        print(self.boom_clock)
         self.boom_clock += self.boom_timer.tick()
         if self.boom_clock <= 900:
             self.image = load_image('boom_' + str(self.boom_clock // 100 + 1) + '.png',
