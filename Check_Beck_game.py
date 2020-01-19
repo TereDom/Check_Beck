@@ -101,6 +101,7 @@ def generate_level(level):
                 player_coords = x, y
 
             elif level[y][x] == '*':
+                Tile('wall', x, y)
                 door = Door((x, y))
             load_val += 1
             show_progress(amount_sprites, load_val)
@@ -1174,6 +1175,13 @@ while running:
         # minimap.draw()
 
     if game_paused:
+        helpful_images_group.draw(screen)
+
+    if gamemap.map[int(player.y)][int(player.x)] == '(':
+        helpful_images.image = load_image('congratulations.png')
+        helpful_images.rect = (0, 0)
+        pygame.mixer.music.load('data/music/background.mp3')
+        pygame.mixer.music.play(-1)
         helpful_images_group.draw(screen)
 
     if player.hp <= 0:
