@@ -33,10 +33,13 @@ hit_sound = pygame.mixer.Sound("data/music/hit.wav")
 damage_sound = pygame.mixer.Sound('data/music/damage.wav')
 heal_sound = pygame.mixer.Sound('data/music/heal.wav')
 bat_hit_sound = pygame.mixer.Sound('data/music/bat_hit.wav')
+frankenstein_hit_sound = pygame.mixer.Sound('data/music/Frankenstein_hit.wav')
+boom_sound = pygame.mixer.Sound('data/music/skeleton_boom.wav')
 dragon_shoot_fireball_sound = pygame.mixer.Sound('data/music/dragon_shoot_fireball.wav')
 ammo_picked_sound = pygame.mixer.Sound("data/music/ammo_picked.wav")
 key_picked_sound = pygame.mixer.Sound('data/music/key_picked.wav')
 potion_picked_sound = pygame.mixer.Sound("data/music/potion_picked.wav")
+
 
 def show_progress(setMax, setVal):
     # Всего процентов
@@ -91,7 +94,7 @@ def generate_level(level):
             elif level[y][x] == '!':
                 Tile("empty", x, y)
                 chests[(y, x)] = Chest((x, y))
-                monsters[(x - 1, y - 1)] = random_monster(random.choices(LIST_OF_MONSTERS)[0],
+                monsters[(x - 1, y - 1)] = random_monster('SkeletonBomber',
                                                           (x - 1, y - 1), (x, y))
             elif level[y][x] == '@':
                 Tile('empty', x, y)
@@ -468,7 +471,7 @@ class Bat(pygame.sprite.Sprite):
         self.rage = False
         self.i = 0
         self.way = [self.CHEST_COORDS]
-        self.attack_timer = pygame.time.Clock()
+
         self.attack_clock = 0
         self.walk_animation = 1
 
@@ -481,6 +484,7 @@ class Bat(pygame.sprite.Sprite):
                 self.i = 0
             if (self.hp < 20) or (gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?'):
                 self.rage = True
+            self.attack_timer = pygame.time.Clock()
         if self.rage:
             if self.way:
                 if self.way[-1] != (player.x, player.y):
@@ -489,11 +493,11 @@ class Bat(pygame.sprite.Sprite):
                     else:
                         self.way.append((player.x, player.y))
                 self.direction = self.change_direction(self.direction)
-                if abs(self.x - player.x) <= self.attack_radius and \
-                        abs(self.y - player.y) <= self.attack_radius:
-                    self.attack()
                 if self.coords != self.way[0]:
                     self.move()
+                    if abs(self.x - player.x) <= self.attack_radius and \
+                        abs(self.y - player.y) <= self.attack_radius:
+                        self.attack()
                 else:
                     del self.way[0]
             else:
@@ -575,6 +579,7 @@ class Dragon(pygame.sprite.Sprite):
                 self.i = 0
             if (self.hp < 30) or (gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?'):
                 self.rage = True
+            self.attack_timer = pygame.time.Clock()
         if self.rage:
             if self.way:
                 if self.way[-1] != (player.x, player.y):
@@ -636,6 +641,7 @@ class Dragon(pygame.sprite.Sprite):
 
     def attack(self):
         self.attack_clock += self.attack_timer.tick()
+        print(self.attack_clock)
         if self.attack_clock >= 2500:
             fireball = Bullet(self)
             dragon_shoot_fireball_sound.play()
@@ -647,7 +653,7 @@ class SkeletonBomber(pygame.sprite.Sprite):
         super().__init__(all_sprites, monsters_group, creatures_group)
         self.image = load_image('skeleton_down.png', 'skeleton')
         self.CHEST_COORDS = chest_coords
-        self.attack_radius = 0.5
+        self.attack_radius = 0
         self.DAMAGE = 25
         self.hp = 10
         self.coords = coords
@@ -658,35 +664,43 @@ class SkeletonBomber(pygame.sprite.Sprite):
         self.i = 0
         self.way = [self.CHEST_COORDS]
         self.walk_animation = 1
-        self.attack_timer = pygame.time.Clock()
         self.attack_clock = 0
+        self.boom_clock = 0
+        self.is_boom = False
 
     def update(self, direction):
-        if not self.rage:
-            self.move()
-            self.i += 1
-            if self.i == 2:
-                self.direction = self.change_direction(self.direction)
-                self.i = 0
-            if (self.hp < 10) or (gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?'):
-                self.rage = True
-        if self.rage:
-            if self.way:
-                if self.way[-1] != (player.x, player.y):
-                    if len(self.way) >= 2 and self.way[-2] == (player.x, player.y):
-                        del self.way[-1]
+        if not self.is_boom:
+            if not self.rage:
+                self.move()
+                self.i += 1
+                if self.i == 2:
+                    self.direction = self.change_direction(self.direction)
+                    self.i = 0
+                if (self.hp < 10) or (gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?'):
+                    self.rage = True
+                self.attack_timer = pygame.time.Clock()
+            if self.rage:
+                if self.way:
+                    if self.way[-1] != (int(player.x), int(player.y)):
+                        if len(self.way) >= 2 and self.way[-2] == (int(player.x), int(player.y)):
+                            del self.way[-1]
+                        else:
+                            self.way.append((int(player.x), int(player.y)))
+                    self.direction = self.change_direction(self.direction)
+                    if (abs(self.x - int(player.x)) <= self.attack_radius and self.y == int(player.y)) or \
+                            (abs(self.y - int(player.y)) <= self.attack_radius and self.x == int(player.x)):
+                        if not self.is_boom:
+                            self.attack()
+
+                    elif self.coords != self.way[0] and not self.is_boom:
+                        self.move()
                     else:
-                        self.way.append((player.x, player.y))
-                self.direction = self.change_direction(self.direction)
-                if self.coords != self.way[0]:
-                    self.move()
-                    if (abs(self.x - player.x) <= self.attack_radius and self.y == player.y) or \
-                            (abs(self.y - player.y) <= self.attack_radius and self.x == player.x):
-                        self.attack()
+                        del self.way[0]
                 else:
-                    del self.way[0]
-            else:
-                self.way.append((player.x, player.y))
+                    self.way.append((int(player.x), int(player.y)))
+        if self.is_boom:
+            print(self.boom_clock)
+            self.boom()
 
     def change_direction(self, old_dir):
         possible_dir = [('down', 0, 1), ('right', 1, 0), ('up', 0, -1), ('left', -1, 0)]
@@ -709,30 +723,43 @@ class SkeletonBomber(pygame.sprite.Sprite):
                     return possible_dir[3]
 
     def move(self):
-        del monsters[self.coords]
-        self.rect = self.rect.move(self.direction[1] * 50, self.direction[2] * 50)
-        self.x += self.direction[1]
-        self.y += self.direction[2]
-        self.coords = self.x, self.y
-        self.walk_animation += 1 if self.walk_animation == 1 else -1
-        self.image = load_image('skeleton_' + self.direction[0] + str(self.walk_animation) + '.png',
-                                'skeleton')
-        monsters[self.coords] = self
+        if not self.is_boom:
+            del monsters[self.coords]
+            self.rect = self.rect.move(self.direction[1] * 50, self.direction[2] * 50)
+            self.x += self.direction[1]
+            self.y += self.direction[2]
+            self.coords = self.x, self.y
+            self.walk_animation += 1 if self.walk_animation == 1 else -1
+            self.image = load_image('skeleton_' + self.direction[0] + str(self.walk_animation) + '.png',
+                                    'skeleton')
+            monsters[self.coords] = self
 
     def damage(self, type):
-        if type == 'bullet':
-            self.hp -= 5
-        elif type == 'knife':
-            self.hp -= 10
-        if self.hp <= 0:
-            del monsters[self.coords]
-            self.kill()
-        damage_sound.play()
+        if not self.is_boom:
+            if type == 'bullet':
+                self.hp -= 5
+            elif type == 'knife':
+                self.hp -= 10
+            if self.hp <= 0:
+                del monsters[self.coords]
+                self.kill()
+            damage_sound.play()
 
     def attack(self):
         self.attack_clock += self.attack_timer.tick()
-        if self.attack_clock >= 10000:
+        if self.attack_clock >= 2500:
             player.hp -= self.DAMAGE
+            boom_sound.play()
+            self.boom_timer = pygame.time.Clock()
+            self.is_boom = True
+
+    def boom(self):
+        print(self.boom_clock)
+        self.boom_clock += self.boom_timer.tick()
+        if self.boom_clock <= 900:
+            self.image = load_image('boom_' + str(self.boom_clock // 100 + 1) + '.png',
+                                    'skeleton')
+        else:
             self.kill()
 
 
@@ -825,9 +852,10 @@ class Frankenstein(pygame.sprite.Sprite):
 
     def attack(self):
         self.attack_clock += self.attack_timer.tick()
-        if self.attack_clock >= 10000:
+        if self.attack_clock >= 2000:
             player.hp -= self.DAMAGE
             self.attack_clock = 0
+            frankenstein_hit_sound.play()
 
 
 class Potion(pygame.sprite.Sprite):
