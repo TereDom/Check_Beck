@@ -1078,9 +1078,9 @@ while running:
                 direction, move, flag = set_direction_hat(event)
             if event.type == pygame.JOYAXISMOTION:
                 set_direction_rs(player, stick)
-            if event.type == pygame.JOYBUTTONDOWN:
-                if event.button in [7, 6]:
-                    running = False
+                if event.type == pygame.JOYBUTTONDOWN:
+                    if event.button in [7, 6]:
+                        running = False
                 if event.button == 0 and gamemap.map[int(player.y)][int(player.x)] == '!':
                     chest = chests[(int(player.y), int(player.x))]
                     chest.open_chest()
@@ -1114,53 +1114,53 @@ while running:
                     event.key in [pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d]:
                 direction, move = set_direction_wasd(event)
 
-            if stick is not None and flag:
-                direction, move = set_direction_ls(stick)
+    if stick is not None and flag:
+        direction, move = set_direction_ls(stick)
 
-            player_timer += player_clock.tick()
-            monster_timer += monster_clock.tick()
-            bul_timer += bul_clock.tick()
+    player_timer += player_clock.tick()
+    monster_timer += monster_clock.tick()
+    bul_timer += bul_clock.tick()
 
-            if monster_timer >= 150:
-                for monster in monsters_group:
-                    monster.update(monster.direction)
-                monster_timer = 0
+    if monster_timer >= 150:
+        for monster in monsters_group:
+            monster.update(monster.direction)
+        monster_timer = 0
 
-            if move and player_timer >= 150:
-                if player.direction != direction:
-                    player.update_direction(direction)
-                else:
-                    player.update(direction)
-                player_timer = 0
+    if move and player_timer >= 150:
+        if player.direction != direction:
+            player.update_direction(direction)
+        else:
+            player.update(direction)
+        player_timer = 0
 
-            if bul_timer >= 30:
-                for sprite in bullet_group:
-                    sprite.update()
-                bul_timer = 0
+    if bul_timer >= 30:
+        for sprite in bullet_group:
+            sprite.update()
+        bul_timer = 0
 
-            camera.update(player)
-            for sprite in all_sprites:
-                camera.apply(sprite)
-            for sprite in dark_group:
-                camera.apply(sprite)
+    camera.update(player)
+    for sprite in all_sprites:
+        camera.apply(sprite)
+    for sprite in dark_group:
+        camera.apply(sprite)
 
-        if not game_paused and player.hp > 0:
-            all_sprites.draw(screen)
-            monsters_group.draw(screen)
-            dark_group.draw(screen)
+    if not game_paused:
+        all_sprites.draw(screen)
+        monsters_group.draw(screen)
+        dark_group.draw(screen)
 
-            inventory.upgrade()
-            minimap.draw()
+        inventory.upgrade()
+        minimap.draw()
 
-        if game_paused:
-            helpful_images_group.draw(screen)
+    if game_paused:
+        helpful_images_group.draw(screen)
 
-        if player.hp <= 0:
-            helpful_images.image = load_image('gameover.png')
-            helpful_images.rect = (0, 0)
-            helpful_images_group.draw(screen)
+    if player.hp <= 0:
+        helpful_images.image = load_image('gameover.png')
+        helpful_images.rect = (0, 0)
+        helpful_images_group.draw(screen)
 
-        pygame.display.flip()
+    pygame.display.flip()
 
 if stick is not None:
     stick.quit()
