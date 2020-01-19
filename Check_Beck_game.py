@@ -40,6 +40,7 @@ dragon_shoot_fireball_sound = pygame.mixer.Sound('data/music/dragon_shoot_fireba
 ammo_picked_sound = pygame.mixer.Sound("data/music/ammo_picked.wav")
 key_picked_sound = pygame.mixer.Sound('data/music/key_picked.wav')
 potion_picked_sound = pygame.mixer.Sound("data/music/potion_picked.wav")
+open_door_sound = pygame.mixer.Sound("data/music/door_open.wav")
 
 
 def show_progress(setMax, setVal):
@@ -82,10 +83,8 @@ def load_level(filename):
 
 
 def generate_level(level):
-    new_player, x, y, chests, monsters = None, None, None, dict(), dict()
-
+    new_player, x, y, chests, monsters, door = None, None, None, dict(), dict(), None
     load_val = 0
-
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == '.':
@@ -102,7 +101,7 @@ def generate_level(level):
                 player_coords = x, y
 
             elif level[y][x] == '*':
-                Tile('door', x, y)
+                door = Door((x, y))
             load_val += 1
             show_progress(amount_sprites, load_val)
 
@@ -111,7 +110,7 @@ def generate_level(level):
     new_player = Player(*player_coords)
 
     gamemap = GameMap(98, 98, load_level('map.txt'))
-    return gamemap, new_player, x, y, chests, gun, knife, monsters
+    return gamemap, new_player, x, y, chests, gun, knife, monsters, door
 
 
 def random_monster(name, coords, chest_coords):
@@ -328,7 +327,7 @@ class Player(pygame.sprite.Sprite):
         super().__init__(all_sprites, creatures_group)
         self.image = player_image
         self.active_weapon = 1
-        self.inventory = {'Ammo': 15, 'Potion': 0, 'Key': 0}
+        self.inventory = {'Ammo': 15, 'Potion': 0, 'Key': 1}
         self.x, self.y = pos_x, pos_y
         self.image = load_image('Player_down.png', 'player')
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
@@ -391,8 +390,8 @@ class Player(pygame.sprite.Sprite):
                 dark_zones[i].kill()
                 del dark_zones[i]
 
-        minimap.update_player_coords(int(self.x), int(self.y))
-        minimap.draw()
+        # minimap.update_player_coords(int(self.x), int(self.y))
+        # minimap.draw()
 
     def update_direction(self, direction):
         self.direction = direction
@@ -1030,6 +1029,23 @@ class Chest(pygame.sprite.Sprite):
         chests_found += 1
 
 
+class Door(pygame.sprite.Sprite):
+    def __init__(self, coords):
+        super().__init__(all_sprites)
+        self.coords = coords
+        self.image = load_image('door.png')
+        self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
+
+    def open(self):
+        open_door_clock = pygame.time.Clock()
+        open_door_timer = 0
+        open_door_sound.play()
+        while open_door_timer != 900:
+            open_door_timer += open_door_clock.tick()
+        self.image = load_image('open_door.png')
+        gamemap.map[self.coords[1]][self.coords[0]] = '('
+
+
 class HelpfulImages(pygame.sprite.Sprite):
     def __init__(self):
         super().__init__(helpful_images_group)
@@ -1038,9 +1054,10 @@ class HelpfulImages(pygame.sprite.Sprite):
 
 
 player_image = load_image('Player_down.png', 'player')
-gamemap, player, level_x, level_y, chests, gun, knife, monsters = generate_level(load_level('map.txt'))
+gamemap, player, level_x, level_y, chests, gun, knife, monsters, door \
+    = generate_level(load_level('map.txt'))
 
-minimap = MiniMap(len(gamemap.map), len(gamemap.map[0]), inventory.get_minimap_coords(), 2, (player.x, player.y))
+# minimap = MiniMap(len(gamemap.map), len(gamemap.map[0]), inventory.get_minimap_coords(), 2, (player.x, player.y))
 
 if pygame.joystick.get_count():
     stick = pygame.joystick.Joystick(0)
@@ -1154,7 +1171,7 @@ while running:
         dark_group.draw(screen)
 
         inventory.upgrade()
-        minimap.draw()
+        # minimap.draw()
 
     if game_paused:
         helpful_images_group.draw(screen)
