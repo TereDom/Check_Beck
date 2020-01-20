@@ -3,6 +3,7 @@ import os
 import random
 import sys
 
+# int(((время / 1000) ** -1) * chest_hound * 100000)
 pygame.init()
 
 bullet_group = pygame.sprite.Group()
@@ -15,6 +16,7 @@ tiles_group = pygame.sprite.Group()
 dark_zones = dict()
 dark_group = pygame.sprite.Group()
 monsters_group = pygame.sprite.Group()
+helpful_images_group = pygame.sprite.Group()
 
 LIST_OF_MONSTERS = ['Frankenstein', 'Bat', 'Dragon', 'SkeletonBomber']
 
@@ -39,6 +41,7 @@ dragon_shoot_fireball_sound = pygame.mixer.Sound('data/music/dragon_shoot_fireba
 ammo_picked_sound = pygame.mixer.Sound("data/music/ammo_picked.wav")
 key_picked_sound = pygame.mixer.Sound('data/music/key_picked.wav')
 potion_picked_sound = pygame.mixer.Sound("data/music/potion_picked.wav")
+open_door_sound = pygame.mixer.Sound("data/music/door_open.wav")
 
 
 def show_progress(setMax, setVal):
@@ -81,10 +84,8 @@ def load_level(filename):
 
 
 def generate_level(level):
-    new_player, x, y, chests, monsters = None, None, None, dict(), dict()
-
+    new_player, x, y, chests, monsters, door = None, None, None, dict(), dict(), None
     load_val = 0
-
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == '.':
@@ -101,7 +102,8 @@ def generate_level(level):
                 player_coords = x, y
 
             elif level[y][x] == '*':
-                Tile('door', x, y)
+                Tile('wall', x, y)
+                door = Door((x, y))
             load_val += 1
             show_progress(amount_sprites, load_val)
 
@@ -110,7 +112,7 @@ def generate_level(level):
     new_player = Player(*player_coords)
 
     gamemap = GameMap(98, 98, load_level('map.txt'))
-    return gamemap, new_player, x, y, chests, gun, knife, monsters
+    return gamemap, new_player, x, y, chests, gun, knife, monsters, door
 
 
 def random_monster(name, coords, chest_coords):
@@ -327,7 +329,7 @@ class Player(pygame.sprite.Sprite):
         super().__init__(all_sprites, creatures_group)
         self.image = player_image
         self.active_weapon = 1
-        self.inventory = {'Ammo': 15, 'Potion': 0, 'Key': 0}
+        self.inventory = {'Ammo': 15, 'Potion': 0, 'Key': 1}
         self.x, self.y = pos_x, pos_y
         self.image = load_image('Player_down.png', 'player')
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
@@ -390,8 +392,8 @@ class Player(pygame.sprite.Sprite):
                 dark_zones[i].kill()
                 del dark_zones[i]
 
-        minimap.update_player_coords(int(self.x), int(self.y))
-        minimap.draw()
+        # minimap.update_player_coords(int(self.x), int(self.y))
+        # minimap.draw()
 
     def update_direction(self, direction):
         self.direction = direction
@@ -779,8 +781,7 @@ class Frankenstein(pygame.sprite.Sprite):
             if self.way:
                 if self.way[-1] != (player.x, player.y):
                     if len(self.way) >= 2 and self.way[-2] == (player.x, player.y):
-                       # del self.way[-1]
-                        pass
+                        del self.way[-1]
                     else:
                         self.way.append((player.x, player.y))
                 new_direction = self.change_direction(self.direction)
@@ -1030,10 +1031,35 @@ class Chest(pygame.sprite.Sprite):
         chests_found += 1
 
 
-player_image = load_image('Player_down.png', 'player')
-gamemap, player, level_x, level_y, chests, gun, knife, monsters = generate_level(load_level('map.txt'))
+class Door(pygame.sprite.Sprite):
+    def __init__(self, coords):
+        super().__init__(all_sprites)
+        self.coords = coords
+        self.image = load_image('door.png')
+        self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
 
-minimap = MiniMap(len(gamemap.map), len(gamemap.map[0]), inventory.get_minimap_coords(), 2, (player.x, player.y))
+    def open(self):
+        open_door_clock = pygame.time.Clock()
+        open_door_timer = 0
+        open_door_sound.play()
+        while open_door_timer != 900:
+            open_door_timer += open_door_clock.tick()
+        self.image = load_image('open_door.png')
+        gamemap.map[self.coords[1]][self.coords[0]] = '('
+
+
+class HelpfulImages(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__(helpful_images_group)
+        self.image = load_image('control.png')
+        self.rect = self.image.get_rect().move(0, -50)
+
+
+player_image = load_image('Player_down.png', 'player')
+gamemap, player, level_x, level_y, chests, gun, knife, monsters, door \
+    = generate_level(load_level('map.txt'))
+
+# minimap = MiniMap(len(gamemap.map), len(gamemap.map[0]), inventory.get_minimap_coords(), 2, (player.x, player.y))
 
 if pygame.joystick.get_count():
     stick = pygame.joystick.Joystick(0)
@@ -1047,6 +1073,9 @@ else:
 player_clock = pygame.time.Clock()
 monster_clock = pygame.time.Clock()
 bul_clock = pygame.time.Clock()
+total_clock = pygame.time.Clock()
+
+total_timer = 0
 bul_timer = 0
 player_timer = 0
 monster_timer = 0
@@ -1058,50 +1087,60 @@ direction = None
 flag = True
 pygame.mixer.music.load('data/music/background.mp3')
 pygame.mixer.music.play(-1)
+game_paused = False
+helpful_images = HelpfulImages()
 
 while running:
     screen.fill(pygame.color.Color("black"))
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        if event.type == pygame.JOYHATMOTION:
-            direction, move, flag = set_direction_hat(event)
-        if event.type == pygame.JOYAXISMOTION:
-            set_direction_rs(player, stick)
-        if event.type == pygame.JOYBUTTONDOWN:
-            if event.button in [7, 6]:
-                running = False
-            if event.button == 0 and gamemap.map[int(player.y)][int(player.x)] == '!':
-                chest = chests[(int(player.y), int(player.x))]
-                chest.open_chest()
-                player.inventory[chest.loot_name.type] += chest.loot_num
-                gamemap.map[int(player.y)][int(player.x)] = '?'
-                del chests[(int(player.y), int(player.x))]
-            if event.button == 2:
-                player.hit()
-            if event.button == 1:
-                player.heal()
-        if event.type == pygame.KEYDOWN:
-            if gamemap.map[int(player.y)][int(player.x)] == '!' and event.key == pygame.K_e:
-                chest = chests[(int(player.y), int(player.x))]
-                chest.open_chest()
-                player.inventory[chest.loot_name.type] += chest.loot_num
-                gamemap.map[int(player.y)][int(player.x)] = '?'
-                del chest
-            if event.key == pygame.K_2:
-                player.active_weapon = 2
-            if event.key == pygame.K_1:
-                player.active_weapon = 1
-            if event.key == pygame.K_3:
-                player.heal()
-            if event.key == pygame.K_SPACE:
-                player.hit()
-            if event.key == pygame.K_ESCAPE:
-                running = False
-
-        if (event.type == pygame.KEYUP or event.type == pygame.KEYDOWN) and \
-                event.key in [pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d]:
-            direction, move = set_direction_wasd(event)
+        if player.hp > 0:
+            if event.type == pygame.JOYHATMOTION:
+                direction, move, flag = set_direction_hat(event)
+            if event.type == pygame.JOYAXISMOTION:
+                set_direction_rs(player, stick)
+                if event.type == pygame.JOYBUTTONDOWN:
+                    if event.button in [7, 6]:
+                        running = False
+                if event.button == 0 and gamemap.map[int(player.y)][int(player.x)] == '!':
+                    chest = chests[(int(player.y), int(player.x))]
+                    chest.open_chest()
+                    player.inventory[chest.loot_name.type] += chest.loot_num
+                    gamemap.map[int(player.y)][int(player.x)] = '?'
+                    del chests[(int(player.y), int(player.x))]
+                if event.button == 2:
+                    player.hit()
+                if event.button == 1:
+                    player.heal()
+            if event.type == pygame.KEYDOWN:
+                if gamemap.map[int(player.y)][int(player.x)] == '!' and event.key == pygame.K_e:
+                    chest = chests[(int(player.y), int(player.x))]
+                    chest.open_chest()
+                    player.inventory[chest.loot_name.type] += chest.loot_num
+                    gamemap.map[int(player.y)][int(player.x)] = '?'
+                    del chest
+                if event.key == pygame.K_2:
+                    player.active_weapon = 2
+                if event.key == pygame.K_1:
+                    player.active_weapon = 1
+                if event.key == pygame.K_3:
+                    player.heal()
+                if event.key == pygame.K_SPACE:
+                    player.hit()
+                if event.key == pygame.K_ESCAPE:
+                    running = False
+                if event.key == pygame.K_F1:
+                    game_paused = True if not game_paused else False
+                    total_clock = pygame.time.Clock()
+                    print(total_timer)
+                if 'Key' in player.inventory.keys():
+                    if event.key == pygame.K_4 and gamemap.map[int(player.y) + 1][int(player.x)] == '*':
+                        player.inventory['Key'] -= 1
+                        door.open()
+            if (event.type == pygame.KEYUP or event.type == pygame.KEYDOWN) and \
+                    event.key in [pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d]:
+                direction, move = set_direction_wasd(event)
 
     if stick is not None and flag:
         direction, move = set_direction_ls(stick)
@@ -1115,7 +1154,7 @@ while running:
             monster.update(monster.direction)
         monster_timer = 0
 
-    if move and player_timer >= 150:
+    if move and not game_paused and player_timer >= 150:
         if player.direction != direction:
             player.update_direction(direction)
         else:
@@ -1133,14 +1172,36 @@ while running:
     for sprite in dark_group:
         camera.apply(sprite)
 
-    all_sprites.draw(screen)
-    monsters_group.draw(screen)
-    dark_group.draw(screen)
+    if not game_paused:
+        all_sprites.draw(screen)
+        monsters_group.draw(screen)
+        dark_group.draw(screen)
 
-    inventory.upgrade()
-    minimap.draw()
+        inventory.upgrade()
+        # minimap.draw()
+
+    if game_paused:
+        helpful_images_group.draw(screen)
+
+    if gamemap.map[int(player.y)][int(player.x)] == '(':
+        game_paused = True
+        helpful_images.image = load_image('congratulations.png')
+        helpful_images.rect = (0, 0)
+        pygame.mixer.music.load('data/music/congratulations.mp3')
+        pygame.mixer.music.play(-1)
+        player.y -= 1
+
+    if player.hp <= 0:
+        game_paused = True
+        helpful_images.image = load_image('gameover.png')
+        helpful_images.rect = (0, 0)
+
+    timer = total_clock.tick()
+    if not game_paused:
+        total_timer += timer
     pygame.display.flip()
 
 if stick is not None:
     stick.quit()
 pygame.quit()
+print(total_timer)
