@@ -357,7 +357,7 @@ class Player(pygame.sprite.Sprite):
             self.y -= 0.5
             self.image = load_image('Player_up.png', 'player')
             self.direction = 'up'
-            self.image = load_image('Player_' + self.direction + str(self.walk_animation) + '.png',
+            self.image = load_image('Player_' + self.direction + '_' + str(self.walk_animation) + '.png',
                                     'player')
             self.coords = (self.x, self.y)
         elif (direction == 'down' and gamemap.map[y + 1][x] != "#" and
@@ -366,7 +366,7 @@ class Player(pygame.sprite.Sprite):
             self.y += 0.5
             self.image = load_image('Player_down.png', 'player')
             self.direction = 'down'
-            self.image = load_image('Player_' + self.direction + str(self.walk_animation) + '.png',
+            self.image = load_image('Player_' + self.direction + '_' + str(self.walk_animation) + '.png',
                                     'player')
             self.coords = (self.x, self.y)
         elif (direction == 'right' and gamemap.map[y][x + 1] != '#' and
@@ -375,7 +375,7 @@ class Player(pygame.sprite.Sprite):
             self.x += 0.5
             self.image = load_image('Player_right.png', 'player')
             self.direction = 'right'
-            self.image = load_image('Player_' + self.direction + str(self.walk_animation) + '.png',
+            self.image = load_image('Player_' + self.direction + '_' + str(self.walk_animation) + '.png',
                                     'player')
             self.coords = (self.x, self.y)
         elif (direction == 'left' and gamemap.map[y][x + (1 if self.x % 1 != 0 else 0) - 1] != '#' and
@@ -384,7 +384,7 @@ class Player(pygame.sprite.Sprite):
             self.x -= 0.5
             self.image = load_image('Player_left.png', 'player')
             self.direction = 'left'
-            self.image = load_image('Player_' + self.direction + str(self.walk_animation) + '.png',
+            self.image = load_image('Player_' + self.direction + '_' + str(self.walk_animation) + '.png',
                                     'player')
             self.coords = (self.x, self.y)
         else:
@@ -453,17 +453,15 @@ class Camera:
         self.dy = -(target.rect.y + target.rect.h // 2 - height // 2)
 
 
-class Bat(pygame.sprite.Sprite):
+class Monsters(pygame.sprite.Sprite):
     def __init__(self, coords, chest_coords):
         super().__init__(all_sprites, monsters_group, creatures_group)
-        self.image = load_image('bat_down.png', 'bat')
         self.CHEST_COORDS = chest_coords
         self.DAMAGE = 5
         self.hp = 20
         self.attack_radius = 0.5
         self.coords = coords
         self.x, self.y = self.coords
-        self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
         self.direction = ('down', 0, 1)
         self.rage = False
         self.i = 0
@@ -471,6 +469,57 @@ class Bat(pygame.sprite.Sprite):
         self.attack_timer = pygame.time.Clock()
         self.attack_clock = 0
         self.walk_animation = 1
+
+    def move(self):
+        del monsters[self.coords]
+        self.rect = self.rect.move(self.direction[1] * tile_width / 2, self.direction[2] * tile_width / 2)
+        self.x += self.direction[1] * 0.5
+        self.y += self.direction[2] * 0.5
+        self.coords = self.x, self.y
+        self.walk_animation += 1 if self.walk_animation == 1 else -1
+        monsters[self.coords] = self
+
+    def damage(self, type):
+        if type == 'bullet':
+            self.hp -= 5
+        elif type == 'knife':
+            self.hp -= 10
+        if self.hp <= 0:
+            del monsters[self.coords]
+            self.kill()
+        damage_sound.play()
+
+    def attack(self, is_bat=False):
+        self.attack_clock += self.attack_timer.tick()
+        if self.attack_clock >= 1000:
+            player.hp -= self.DAMAGE
+            self.attack_clock = 0
+            if is_bat:
+                bat_hit_sound.play()
+            else:
+                damage_sound.play()
+
+    def change_direction(self, old_dir):
+        possible_dir = [('down', 0, 1), ('right', 1, 0), ('up', 0, -1), ('left', -1, 0)]
+        if not self.rage:
+            new_dir = possible_dir.index(old_dir) + 1
+            new_dir = possible_dir[new_dir if new_dir != len(possible_dir) else 0]
+            return new_dir
+        elif self.rage:
+            y_changed = self.way[0][1] - self.y
+            x_changed = self.way[0][0] - self.x
+            if y_changed != 0:
+                if y_changed > 0:
+                    return possible_dir[0]
+                elif y_changed < 0:
+                    return possible_dir[2]
+            elif x_changed != 0:
+                if x_changed > 0:
+                    return possible_dir[1]
+                elif x_changed < 0:
+                    return possible_dir[3]
+            else:
+                return self.direction
 
     def update(self, direction):
         if not self.rage:
@@ -499,140 +548,37 @@ class Bat(pygame.sprite.Sprite):
             else:
                 self.way.append((player.x, player.y))
 
-    def change_direction(self, old_dir):
-        possible_dir = [('down', 0, 1), ('right', 1, 0), ('up', 0, -1), ('left', -1, 0)]
-        if not self.rage:
-            new_dir = possible_dir.index(old_dir) + 1
-            new_dir = possible_dir[new_dir if new_dir != len(possible_dir) else 0]
-            return new_dir
-        elif self.rage:
-            y_changed = self.way[0][1] - self.y
-            x_changed = self.way[0][0] - self.x
-            if y_changed != 0:
-                if y_changed > 0:
-                    return possible_dir[0]
-                elif y_changed < 0:
-                    return possible_dir[2]
-            elif x_changed != 0:
-                if x_changed > 0:
-                    return possible_dir[1]
-                elif x_changed < 0:
-                    return possible_dir[3]
 
-    def move(self):
-        del monsters[self.coords]
-        self.rect = self.rect.move(self.direction[1] * tile_width / 2, self.direction[2] * tile_width / 2)
-        self.x += self.direction[1] * 0.5
-        self.y += self.direction[2] * 0.5
-        self.coords = self.x, self.y
-        self.walk_animation += 1 if self.walk_animation == 1 else -1
-        self.image = load_image('bat_' + self.direction[0] + str(self.walk_animation) + '.png', 'bat')
-        monsters[self.coords] = self
-
-    def attack(self):
-        self.attack_clock += self.attack_timer.tick()
-        if self.attack_clock >= 1000:
-            player.hp -= self.DAMAGE
-            self.attack_clock = 0
-            bat_hit_sound.play()
-
-    def damage(self, type):
-        if type == 'bullet':
-            self.hp -= 5
-        elif type == 'knife':
-            self.hp -= 10
-        if self.hp <= 0:
-            del monsters[self.coords]
-            self.kill()
-        damage_sound.play()
-
-
-class Dragon(pygame.sprite.Sprite):
+class Bat(Monsters):
     def __init__(self, coords, chest_coords):
-        super().__init__(all_sprites, monsters_group, creatures_group)
-        self.image = load_image('dragon_down.png', 'dragon')
-        self.CHEST_COORDS = chest_coords
-        self.DAMAGE = 10
-        self.hp = 30
-        self.attack_radius = 7
-        self.coords = coords
-        self.x, self.y = self.coords
+        super().__init__(coords, chest_coords)
+        self.image = load_image('bat_down.png', 'bat')
         self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
-        self.direction = ('down', 0, 1)
-        self.rage = False
-        self.i = 0
-        self.way = [self.CHEST_COORDS]
-        self.attack_timer = pygame.time.Clock()
-        self.attack_clock = 0
-        self.walk_animation = 1
-
-    def update(self, direction):
-        if not self.rage:
-            self.move()
-            self.i += 1
-            if self.i == 4:
-                self.direction = self.change_direction(self.direction)
-                self.i = 0
-            if (self.hp < 30) or (gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?'):
-                self.rage = True
-        if self.rage:
-            if self.way:
-                if self.way[-1] != (player.x, player.y):
-                    if len(self.way) >= 2 and self.way[-2] == (player.x, player.y):
-                        del self.way[-1]
-                    else:
-                        self.way.append((player.x, player.y))
-                self.direction = self.change_direction(self.direction)
-                if self.coords != self.way[0]:
-                    self.move()
-                    if (abs(self.x - player.x) <= self.attack_radius and self.y == player.y) or \
-                            (abs(self.y - player.y) <= self.attack_radius and self.x == player.x):
-                        self.attack()
-                else:
-                    del self.way[0]
-            else:
-                self.way.append((player.x, player.y))
-
-    def change_direction(self, old_dir):
-        possible_dir = [('down', 0, 1), ('right', 1, 0), ('up', 0, -1), ('left', -1, 0)]
-        if not self.rage:
-            new_dir = possible_dir.index(old_dir) + 1
-            new_dir = possible_dir[new_dir if new_dir != len(possible_dir) else 0]
-            return new_dir
-        elif self.rage:
-            y_changed = self.way[0][1] - self.y
-            x_changed = self.way[0][0] - self.x
-            if y_changed != 0:
-                if y_changed > 0:
-                    return possible_dir[0]
-                elif y_changed < 0:
-                    return possible_dir[2]
-            elif x_changed != 0:
-                if x_changed > 0:
-                    return possible_dir[1]
-                elif x_changed < 0:
-                    return possible_dir[3]
 
     def move(self):
-        del monsters[self.coords]
-        self.rect = self.rect.move(self.direction[1] * tile_width / 2, self.direction[2] * tile_width / 2)
-        self.x += self.direction[1] * 0.5
-        self.y += self.direction[2] * 0.5
-        self.coords = self.x, self.y
-        self.walk_animation += 1 if self.walk_animation == 1 else -1
-        self.image = load_image('dragon_' + self.direction[0] + str(self.walk_animation) + '.png',
-                                'dragon')
-        monsters[self.coords] = self
+        super().move()
+        self.image = load_image('bat_' + self.direction[0] + '_' + str(self.walk_animation) + '.png', 'bat')
 
     def damage(self, type):
-        if type == 'bullet':
-            self.hp -= 5
-        elif type == 'knife':
-            self.hp -= 10
-        if self.hp <= 0:
-            del monsters[self.coords]
-            self.kill()
-        damage_sound.play()
+        super().damage(type)
+        self.image = load_image('bat_' + self.direction[0] + '_' + str(self.walk_animation) + '_damaged.png',
+                                'bat')
+
+
+class Dragon(Monsters):
+    def __init__(self, coords, chest_coords):
+        super().__init__(coords, chest_coords)
+        self.image = load_image('dragon_down.png', 'dragon')
+        self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
+
+    def move(self):
+        super().move()
+        self.image = load_image('dragon_' + self.direction[0] + '_' + str(self.walk_animation) + '.png', 'dragon')
+
+    def damage(self, type):
+        super().damage(type)
+        self.image = load_image('dragon_' + self.direction[0] + '_' + str(self.walk_animation) + '_damaged.png',
+                                'dragon')
 
     def attack(self):
         self.attack_clock += self.attack_timer.tick()
@@ -642,192 +588,36 @@ class Dragon(pygame.sprite.Sprite):
             self.attack_clock = 0
 
 
-class SkeletonBomber(pygame.sprite.Sprite):
+class SkeletonBomber(Monsters):
     def __init__(self, coords, chest_coords):
-        super().__init__(all_sprites, monsters_group, creatures_group)
+        super().__init__(coords, chest_coords)
         self.image = load_image('skeleton_down.png', 'skeleton')
-        self.CHEST_COORDS = chest_coords
-        self.attack_radius = 0.5
-        self.DAMAGE = 25
-        self.hp = 10
-        self.coords = coords
-        self.x, self.y = self.coords
         self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
-        self.direction = ('down', 0, 1)
-        self.rage = False
-        self.i = 0
-        self.way = [self.CHEST_COORDS]
-        self.walk_animation = 1
-        self.attack_timer = pygame.time.Clock()
-        self.attack_clock = 0
-
-    def update(self, direction):
-        if not self.rage:
-            self.move()
-            self.i += 1
-            if self.i == 2:
-                self.direction = self.change_direction(self.direction)
-                self.i = 0
-            if (self.hp < 10) or (gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?'):
-                self.rage = True
-        if self.rage:
-            if self.way:
-                if self.way[-1] != (player.x, player.y):
-                    if len(self.way) >= 2 and self.way[-2] == (player.x, player.y):
-                        del self.way[-1]
-                    else:
-                        self.way.append((player.x, player.y))
-                self.direction = self.change_direction(self.direction)
-                if self.coords != self.way[0]:
-                    self.move()
-                    if (abs(self.x - player.x) <= self.attack_radius and self.y == player.y) or \
-                            (abs(self.y - player.y) <= self.attack_radius and self.x == player.x):
-                        self.attack()
-                else:
-                    del self.way[0]
-            else:
-                self.way.append((player.x, player.y))
-
-    def change_direction(self, old_dir):
-        possible_dir = [('down', 0, 1), ('right', 1, 0), ('up', 0, -1), ('left', -1, 0)]
-        if not self.rage:
-            new_dir = possible_dir.index(old_dir) + 1
-            new_dir = possible_dir[new_dir if new_dir != len(possible_dir) else 0]
-            return new_dir
-        elif self.rage:
-            y_changed = self.way[0][1] - self.y
-            x_changed = self.way[0][0] - self.x
-            if y_changed != 0:
-                if y_changed > 0:
-                    return possible_dir[0]
-                elif y_changed < 0:
-                    return possible_dir[2]
-            elif x_changed != 0:
-                if x_changed > 0:
-                    return possible_dir[1]
-                elif x_changed < 0:
-                    return possible_dir[3]
 
     def move(self):
-        del monsters[self.coords]
-        self.rect = self.rect.move(self.direction[1] * 50, self.direction[2] * 50)
-        self.x += self.direction[1]
-        self.y += self.direction[2]
-        self.coords = self.x, self.y
-        self.walk_animation += 1 if self.walk_animation == 1 else -1
-        self.image = load_image('skeleton_' + self.direction[0] + str(self.walk_animation) + '.png',
+        super().move()
+        self.image = load_image('skeleton_' + self.direction[0] + '_' + str(self.walk_animation) + '.png', 'skeleton')
+
+    def damage(self, type):
+        super().damage(type)
+        self.image = load_image('skeleton_' + self.direction[0] + '_' + str(self.walk_animation) + '_damaged.png',
                                 'skeleton')
-        monsters[self.coords] = self
-
-    def damage(self, type):
-        if type == 'bullet':
-            self.hp -= 5
-        elif type == 'knife':
-            self.hp -= 10
-        if self.hp <= 0:
-            del monsters[self.coords]
-            self.kill()
-        damage_sound.play()
-
-    def attack(self):
-        self.attack_clock += self.attack_timer.tick()
-        if self.attack_clock >= 10000:
-            player.hp -= self.DAMAGE
-            self.kill()
 
 
-class Frankenstein(pygame.sprite.Sprite):
+class Frankenstein(Monsters):
     def __init__(self, coords, chest_coords):
-        super().__init__(all_sprites, monsters_group, creatures_group)
+        super().__init__(coords, chest_coords)
         self.image = load_image('frankenstein_down.png', 'frankenstein')
-        self.CHEST_COORDS = chest_coords
-        self.hp = 75
-        self.DAMAGE = 15
-        self.attack_radius = 0.5
-        self.coords = coords
-        self.x, self.y = self.coords
         self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
-        self.direction = ('down', 0, 1)
-        self.rage = False
-        self.i = 0
-        self.way = [self.CHEST_COORDS]
-        self.walk_animation = 1
-        self.attack_timer = pygame.time.Clock()
-        self.attack_clock = 0
-
-    def update(self, direction):
-        if not self.rage:
-            self.move()
-            self.i += 1
-            if self.i == 8:
-                self.direction = self.change_direction(self.direction)
-                self.i = 0
-            if (self.hp < 75) or (gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?'):
-                self.rage = True
-        if self.rage:
-            if self.way:
-                if self.way[-1] != (player.x, player.y):
-                    if len(self.way) >= 2 and self.way[-2] == (player.x, player.y):
-                        del self.way[-1]
-                    else:
-                        self.way.append((player.x, player.y))
-                self.direction = self.change_direction(self.direction)
-                if self.coords != self.way[0]:
-                    self.move()
-                    if (abs(self.x - player.x) <= self.attack_radius and self.y == player.y) or \
-                            (abs(self.y - player.y) <= self.attack_radius and self.x == player.x):
-                        self.attack()
-                else:
-                    del self.way[0]
-            else:
-                self.way.append((player.x, player.y))
-
-    def change_direction(self, old_dir):
-        possible_dir = [('down', 0, 1), ('right', 1, 0), ('up', 0, -1), ('left', -1, 0)]
-        if not self.rage:
-            new_dir = possible_dir.index(old_dir) + 1
-            new_dir = possible_dir[new_dir if new_dir != len(possible_dir) else 0]
-            return new_dir
-        elif self.rage:
-            y_changed = self.way[0][1] - self.y
-            x_changed = self.way[0][0] - self.x
-            if y_changed != 0:
-                if y_changed > 0:
-                    return possible_dir[0]
-                elif y_changed < 0:
-                    return possible_dir[2]
-            elif x_changed != 0:
-                if x_changed > 0:
-                    return possible_dir[1]
-                elif x_changed < 0:
-                    return possible_dir[3]
 
     def move(self):
-        del monsters[self.coords]
-        self.rect = self.rect.move(self.direction[1] * 12.5, self.direction[2] * 12.5)
-        self.x += self.direction[1] * 0.25
-        self.y += self.direction[2] * 0.25
-        self.coords = self.x, self.y
-        self.walk_animation += 1 if self.walk_animation == 1 else -1
-        self.image = load_image('frankenstein_' + self.direction[0] + str(self.walk_animation) + '.png',
-                                'frankenstein')
-        monsters[self.coords] = self
+        super().move()
+        self.image = load_image('frankenstein_' + self.direction[0] + '_' + str(self.walk_animation) + '.png', 'frankenstein')
 
     def damage(self, type):
-        if type == 'bullet':
-            self.hp -= 5
-        elif type == 'knife':
-            self.hp -= 10
-        if self.hp <= 0:
-            del monsters[self.coords]
-            self.kill()
-        damage_sound.play()
-
-    def attack(self):
-        self.attack_clock += self.attack_timer.tick()
-        if self.attack_clock >= 10000:
-            player.hp -= self.DAMAGE
-            self.attack_clock = 0
+        super().damage(type)
+        self.image = load_image('frankenstein_' + self.direction[0] + '_' + str(self.walk_animation) + '_damaged.png',
+                                'frankenstein')
 
 
 class Potion(pygame.sprite.Sprite):
