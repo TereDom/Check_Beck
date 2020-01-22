@@ -104,7 +104,8 @@ def generate_level(level):
     new_player = Player(*player_coords)
 
     gamemap = GameMap(98, 98, load_level('map.txt'))
-    return gamemap, new_player, x, y, chests, gun, knife, monsters, door
+    game_start = True
+    return gamemap, new_player, x, y, chests, gun, knife, monsters, door, game_start
 
 
 def random_monster(name, coords, chest_coords):
@@ -1062,10 +1063,13 @@ class Menu(pygame.sprite.Sprite):
             self.exit()
 
     def play(self):
-        global game_start
+        global game_start, gamemap, player, level_x, level_y, chests, gun, knife, monsters, door, minimap
         pygame.mixer.music.load('data/music/background.mp3')
         pygame.mixer.music.play(-1)
-        game_start = True
+        gamemap, player, level_x, level_y, chests, gun, knife, monsters, door, game_start \
+            = generate_level(load_level('map.txt'))
+        minimap = MiniMap(len(gamemap.map), len(gamemap.map[0]), inventory.get_minimap_coords(), 2,
+                          (player.x, player.y))
 
     def load(self):
         pass
@@ -1077,10 +1081,7 @@ class Menu(pygame.sprite.Sprite):
 
 player_image = load_image('Player_down.png', 'player')
 gamemap, player, level_x, level_y, chests, gun, knife, monsters, door \
-    = generate_level(load_level('map.txt'))
-
-minimap = MiniMap(len(gamemap.map), len(gamemap.map[0]), inventory.get_minimap_coords(), 2, (player.x, player.y))
-
+    = None, None, None, None, None, None, None, None, None
 if pygame.joystick.get_count():
     stick = pygame.joystick.Joystick(0)
     stick.init()
@@ -1193,13 +1194,13 @@ while running:
             bul_timer = 0
 
         camera.update(player)
+
         for sprite in all_sprites:
             camera.apply(sprite)
         for sprite in dark_group:
             camera.apply(sprite)
 
         if not game_paused:
-
             all_sprites.draw(screen)
             monsters_group.draw(screen)
             dark_group.draw(screen)
@@ -1226,6 +1227,7 @@ while running:
         timer = total_clock.tick()
         if not game_paused:
             total_timer += timer
+
     if not game_start:
         menu_group.draw(screen)
     pygame.display.flip()
