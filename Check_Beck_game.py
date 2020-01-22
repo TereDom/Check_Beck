@@ -2,9 +2,13 @@ import pygame
 import os
 import random
 import sys
+import sqlite3
+
 
 # int(((время / 1000) ** -1) * chest_hound * 100000)
 pygame.init()
+
+reservation = sqlite3.connect("data/reservation.db")
 
 bullet_group = pygame.sprite.Group()
 creatures_group = pygame.sprite.Group()
@@ -116,6 +120,18 @@ def random_monster(name, coords, chest_coords):
         return SkeletonBomber(coords, chest_coords)
     elif name == 'Frankenstein':
         return Frankenstein(coords, chest_coords)
+
+
+# def save_results():
+#     cur = reservation.cursor()
+#     reqest = f"""UPDATE last_save
+#                 SET Map = {'gamemap.map'}
+#                 player_coords = {'player coords'}
+#                 player_direction = {player.direction}
+#                 monsters = {'monsters'})"""
+#     print(reqest)
+#     cur.execute(reqest).fetchall()
+#     reservation.commit()
 
 
 class Inventory:
@@ -1020,6 +1036,7 @@ class Chest(pygame.sprite.Sprite):
         else:
             potion_picked_sound.play()
         self.image = load_image('open_chest.png')
+        # save_results()
         chests_found += 1
 
 
