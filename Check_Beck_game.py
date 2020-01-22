@@ -1166,7 +1166,7 @@ while running:
                     if event.key == pygame.K_SPACE:
                         player.hit()
                     if event.key == pygame.K_ESCAPE:
-                        running = False
+                        game_start = False
                     if event.key == pygame.K_F1:
                         game_paused = True if not game_paused else False
                         total_clock = pygame.time.Clock()
