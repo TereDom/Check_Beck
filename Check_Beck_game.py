@@ -575,12 +575,12 @@ class Bat(Monsters):
     def move(self):
         super().move()
         if not self.direction[0].startswith('None_'):
-            self.image = load_image('frankenstein_' + self.direction[0] + '_' + str(self.walk_animation) + '.png',
-                                    'frankenstein')
+            self.image = load_image('bat_' + self.direction[0] + '_' + str(self.walk_animation) + '.png',
+                                    'bat')
         else:
             dir = self.direction[0]
             dir = dir.lstrip('None_')
-            self.image = load_image('frankenstein_' + dir + '.png', 'frankenstein')
+            self.image = load_image('bat_' + dir + '.png', 'bat')
 
     def damage(self, type):
         super().damage(type)
@@ -597,12 +597,12 @@ class Dragon(Monsters):
     def move(self):
         super().move()
         if not self.direction[0].startswith('None_'):
-            self.image = load_image('frankenstein_' + self.direction[0] + '_' + str(self.walk_animation) + '.png',
-                                    'frankenstein')
+            self.image = load_image('dragon_' + self.direction[0] + '_' + str(self.walk_animation) + '.png',
+                                    'dragon')
         else:
             dir = self.direction[0]
             dir = dir.lstrip('None_')
-            self.image = load_image('frankenstein_' + dir + '.png', 'frankenstein')
+            self.image = load_image('dragon_' + dir + '.png', 'dragon')
 
     def damage(self, type):
         super().damage(type)
@@ -622,21 +622,82 @@ class SkeletonBomber(Monsters):
         super().__init__(coords, chest_coords)
         self.image = load_image('skeleton_down.png', 'skeleton')
         self.rect = self.image.get_rect().move(tile_width * coords[0], tile_height * coords[1])
+        self.is_boom = False
+        self.boom_timer = 0
 
     def move(self):
         super().move()
         if not self.direction[0].startswith('None_'):
-            self.image = load_image('frankenstein_' + self.direction[0] + '_' + str(self.walk_animation) + '.png',
-                                    'frankenstein')
+            self.image = load_image('skeleton_' + self.direction[0] + '_' + str(self.walk_animation) + '.png',
+                                    'skeleton')
         else:
             dir = self.direction[0]
             dir = dir.lstrip('None_')
-            self.image = load_image('frankenstein_' + dir + '.png', 'frankenstein')
+            self.image = load_image('skeleton_' + dir + '.png', 'skeleton')
+
+    def update(self, direction):
+        if not self.is_boom:
+            if not self.rage:
+                self.move()
+                self.i += 1
+                if self.i == 2:
+                    self.direction = self.change_direction(self.direction)
+                    self.i = 0
+                if (self.hp < 10) or (gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?'):
+                    self.rage = True
+                self.attack_timer = pygame.time.Clock()
+            if self.rage:
+                if self.way:
+                    if self.way[-1] != (int(player.x), int(player.y)):
+                        if len(self.way) >= 2 and self.way[-2] == (int(player.x), int(player.y)):
+                            del self.way[-1]
+                        else:
+                            self.way.append((int(player.x), int(player.y)))
+                    self.direction = self.change_direction(self.direction)
+                    if (abs(self.x - int(player.x)) <= self.attack_radius and self.y == int(player.y)) or \
+                            (abs(self.y - int(player.y)) <= self.attack_radius and self.x == int(player.x)):
+                        if not self.is_boom:
+                            self.attack()
+
+                    elif self.coords != self.way[0] and not self.is_boom:
+                        self.move()
+                    else:
+                        del self.way[0]
+                else:
+                    self.way.append((int(player.x), int(player.y)))
+        if self.is_boom:
+            print(self.boom_clock)
+            self.boom()
 
     def damage(self, type):
-        super().damage(type)
-        self.image = load_image('skeleton_' + self.direction[0] + '_' + str(self.walk_animation) + '_damaged.png',
-                                'skeleton')
+        if not self.is_boom:
+            if type == 'bullet':
+                self.hp -= 5
+            elif type == 'knife':
+                self.hp -= 10
+            if self.hp <= 0:
+                del monsters[self.coords]
+                self.kill()
+            damage_sound.play()
+            self.image = load_image('skeleton_' + self.direction[0] + '_' + str(self.walk_animation) + '_damaged.png',
+                                    'skeleton')
+
+    def attack(self):
+        self.attack_clock += self.attack_timer.tick()
+        if self.attack_clock >= 2500:
+            player.damage(self.DAMAGE)
+            #boom_sound.play()
+            self.boom_timer = pygame.time.Clock()
+            self.is_boom = True
+
+    def boom(self):
+        print(self.boom_clock)
+        self.boom_clock += self.boom_timer.tick()
+        if self.boom_clock <= 900:
+            self.image = load_image('boom_' + str(self.boom_clock // 100 + 1) + '.png',
+                                    'skeleton')
+        else:
+            self.kill()
 
 
 class Frankenstein(Monsters):
