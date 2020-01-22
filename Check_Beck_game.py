@@ -2,13 +2,12 @@ import pygame
 import os
 import random
 import sys
-import sqlite3
+# import sqlite3
 
 
-# int(((время / 1000) ** -1) * chest_hound * 100000)
 pygame.init()
 
-reservation = sqlite3.connect("data/reservation.db")
+# reservation = sqlite3.connect("data/reservation.db")
 
 bullet_group = pygame.sprite.Group()
 creatures_group = pygame.sprite.Group()
@@ -82,6 +81,7 @@ def load_level(filename):
 def generate_level(level):
     new_player, x, y, chests, monsters, door = None, None, None, dict(), dict(), None
     load_val = 0
+    # menu.image = load_image('loading.png') меню меняется на надпись загрузка
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == '.':
@@ -108,6 +108,8 @@ def generate_level(level):
 
     gamemap = GameMap(98, 98, load_level('map.txt'))
     game_start = True
+    pygame.mixer.music.load('data/music/background.mp3')
+    pygame.mixer.music.play(-1)
     return gamemap, new_player, x, y, chests, gun, knife, monsters, door, game_start
 
 
@@ -122,7 +124,7 @@ def random_monster(name, coords, chest_coords):
         return Frankenstein(coords, chest_coords)
 
 
-# def save_results():
+# def save_results(): сохранение в бд
 #     cur = reservation.cursor()
 #     reqest = f"""UPDATE last_save
 #                 SET Map = {'gamemap.map'}
@@ -337,7 +339,7 @@ class Player(pygame.sprite.Sprite):
         super().__init__(all_sprites, creatures_group)
         self.image = player_image
         self.active_weapon = 1
-        self.inventory = {'Ammo': 15, 'Potion': 0, 'Key': 0}
+        self.inventory = {'Ammo': 15, 'Potion': 0, 'Key': 1}
         self.x, self.y = pos_x, pos_y
         self.image = load_image('Player_down.png', 'player')
         self.rect = self.image.get_rect().move(tile_width * pos_x, tile_height * pos_y)
@@ -1080,8 +1082,6 @@ class Menu(pygame.sprite.Sprite):
 
     def play(self):
         global game_start, gamemap, player, level_x, level_y, chests, gun, knife, monsters, door, minimap
-        pygame.mixer.music.load('data/music/background.mp3')
-        pygame.mixer.music.play(-1)
         gamemap, player, level_x, level_y, chests, gun, knife, monsters, door, game_start \
             = generate_level(load_level('map.txt'))
         minimap = MiniMap(len(gamemap.map), len(gamemap.map[0]), inventory.get_minimap_coords(), 2,
@@ -1225,7 +1225,13 @@ while running:
         minimap.draw()
 
         if game_paused:
+            font = pygame.font.Font(None, 50)
+            text = font.render((str(int(((total_timer / 1000) ** -1) * chests_found * 100000))),
+                               1, (pygame.color.Color('white')))
+
             helpful_images_group.draw(screen)
+            if gamemap.map[int(player.y) + 1][int(player.x)] == '(':
+                screen.blit(text, (500, 325))
 
         if gamemap.map[int(player.y)][int(player.x)] == '(':
             game_paused = True
@@ -1233,6 +1239,7 @@ while running:
             helpful_images.rect = (0, 0)
             pygame.mixer.music.load('data/music/congratulations.mp3')
             pygame.mixer.music.play(-1)
+
             player.y -= 1
 
         if player.hp <= 0:
