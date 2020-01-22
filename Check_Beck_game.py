@@ -19,7 +19,7 @@ monsters_group = pygame.sprite.Group()
 helpful_images_group = pygame.sprite.Group()
 menu_group = pygame.sprite.Group()
 
-LIST_OF_MONSTERS = ['Frankenstein', 'Bat', 'Dragon', 'SkeletonBomber']
+LIST_OF_MONSTERS = ['Bat', 'Dragon', 'SkeletonBomber', 'Frankenstein']
 
 size = width, height = 850, 500
 tile_width = tile_height = 50
@@ -460,7 +460,7 @@ class Bat(pygame.sprite.Sprite):
         self.direction = ('down', 0, 1)
         self.rage = False
         self.i = 0
-        self.way = [self.CHEST_COORDS]
+        self.way = []
 
         self.attack_clock = 0
         self.walk_animation = 1
@@ -472,7 +472,7 @@ class Bat(pygame.sprite.Sprite):
             if self.i == 4:
                 self.direction = self.change_direction(self.direction)
                 self.i = 0
-            if (self.hp < 20) or (gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?'):
+            if (self.hp < 35) or (gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?'):
                 self.rage = True
             self.attack_timer = pygame.time.Clock()
         if self.rage:
@@ -555,7 +555,7 @@ class Dragon(pygame.sprite.Sprite):
         self.direction = ('down', 0, 1)
         self.rage = False
         self.i = 0
-        self.way = [self.CHEST_COORDS]
+        self.way = []
         self.attack_timer = pygame.time.Clock()
         self.attack_clock = 0
         self.walk_animation = 1
@@ -651,7 +651,7 @@ class SkeletonBomber(pygame.sprite.Sprite):
         self.direction = ('down', 0, 1)
         self.rage = False
         self.i = 0
-        self.way = [self.CHEST_COORDS]
+        self.way = []
         self.walk_animation = 1
         self.attack_clock = 0
         self.boom_clock = 0
@@ -764,7 +764,7 @@ class Frankenstein(pygame.sprite.Sprite):
         self.direction = ('down', 0, 1)
         self.rage = False
         self.i = 0
-        self.way = [self.CHEST_COORDS]
+        self.way = []
         self.walk_animation = 1
         self.attack_timer = pygame.time.Clock()
         self.attack_clock = 0
