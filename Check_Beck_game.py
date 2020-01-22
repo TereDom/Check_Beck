@@ -1063,6 +1063,8 @@ class Menu(pygame.sprite.Sprite):
 
     def play(self):
         global game_start
+        pygame.mixer.music.load('data/music/background.mp3')
+        pygame.mixer.music.play(-1)
         game_start = True
 
     def load(self):
@@ -1103,7 +1105,7 @@ running = True
 move = False
 direction = None
 flag = True
-pygame.mixer.music.load('data/music/background.mp3')
+pygame.mixer.music.load('data/music/menu.mp3')
 pygame.mixer.music.play(-1)
 game_paused = False
 helpful_images = HelpfulImages()
