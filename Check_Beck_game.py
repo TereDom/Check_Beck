@@ -92,7 +92,6 @@ def generate_level(level):
             elif level[y][x] == '@':
                 Tile('empty', x, y)
                 player_coords = x, y
-
             elif level[y][x] == '*':
                 Tile('wall', x, y)
                 door = Door((x, y))
@@ -336,8 +335,8 @@ class Player(pygame.sprite.Sprite):
         x = int(self.x)
         y = int(self.y)
         self.walk_animation += 1 if self.walk_animation == 1 else -1
-        if (direction == 'up' and gamemap.map[y + (1 if self.y % 1 != 0 else 0) - 1][x] != '#' and
-                gamemap.map[y + (1 if self.y % 1 != 0 else 0) - 1][x + (1 if self.x % 1 != 0 else 0)] != '#'):
+        if (direction == 'up' and gamemap.map[y + (1 if self.y % 1 != 0 else 0) - 1][x] not in ('#', '*') and
+                gamemap.map[y + (1 if self.y % 1 != 0 else 0) - 1][x + (1 if self.x % 1 != 0 else 0)] not in ('#', '*')):
             self.rect = self.rect.move(0, -25)
             self.y -= 0.5
             self.image = load_image('Player_up.png', 'player')
@@ -345,8 +344,8 @@ class Player(pygame.sprite.Sprite):
             self.image = load_image('Player_' + self.direction + str(self.walk_animation) + '.png',
                                     'player')
             self.coords = (self.x, self.y)
-        elif (direction == 'down' and gamemap.map[y + 1][x] != "#" and
-              gamemap.map[y + 1][x + (1 if self.x % 1 != 0 else 0)] != '#'):
+        elif (direction == 'down' and gamemap.map[y + 1][x] not in ('#', '*') and
+              gamemap.map[y + 1][x + (1 if self.x % 1 != 0 else 0)] not in ('#', '*')):
             self.rect = self.rect.move(0, 25)
             self.y += 0.5
             self.image = load_image('Player_down.png', 'player')
@@ -354,8 +353,8 @@ class Player(pygame.sprite.Sprite):
             self.image = load_image('Player_' + self.direction + str(self.walk_animation) + '.png',
                                     'player')
             self.coords = (self.x, self.y)
-        elif (direction == 'right' and gamemap.map[y][x + 1] != '#' and
-              gamemap.map[y + (1 if self.y % 1 != 0 else 0)][x + 1] != '#'):
+        elif (direction == 'right' and gamemap.map[y][x + 1] not in ('#', '*') and
+              gamemap.map[y + (1 if self.y % 1 != 0 else 0)][x + 1] not in ('#', '*')):
             self.rect = self.rect.move(25, 0)
             self.x += 0.5
             self.image = load_image('Player_right.png', 'player')
@@ -363,8 +362,8 @@ class Player(pygame.sprite.Sprite):
             self.image = load_image('Player_' + self.direction + str(self.walk_animation) + '.png',
                                     'player')
             self.coords = (self.x, self.y)
-        elif (direction == 'left' and gamemap.map[y][x + (1 if self.x % 1 != 0 else 0) - 1] != '#' and
-              gamemap.map[y + (1 if self.y % 1 != 0 else 0)][x + (1 if self.x % 1 != 0 else 0) - 1] != '#'):
+        elif (direction == 'left' and gamemap.map[y][x + (1 if self.x % 1 != 0 else 0) - 1] not in ('#', '*') and
+              gamemap.map[y + (1 if self.y % 1 != 0 else 0)][x + (1 if self.x % 1 != 0 else 0) - 1] not in ('#', '*')):
             self.rect = self.rect.move(-25, 0)
             self.x -= 0.5
             self.image = load_image('Player_left.png', 'player')
@@ -1160,7 +1159,7 @@ while running:
                     if event.key == pygame.K_F1:
                         game_paused = True if not game_paused else False
                         total_clock = pygame.time.Clock()
-                    if 'Key' in player.inventory.keys():
+                    if player.inventory['Key'] != 0:
                         if event.key == pygame.K_4 and gamemap.map[int(player.y) + 1][int(player.x)] == '*':
                             player.inventory['Key'] -= 1
                             door.open()
