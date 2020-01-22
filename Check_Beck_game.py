@@ -345,11 +345,12 @@ class Player(pygame.sprite.Sprite):
         self.hp = HP
         self.direction = 'down'
         self.coords = (self.x, self.y)
-        self.walk_animation = 1
+        self.walk_animation = 0
 
     def update(self, direction):
         x = int(self.x)
         y = int(self.y)
+        self.walk_animation = 1 if not self.walk_animation else self.walk_animation
         self.walk_animation += 1 if self.walk_animation == 1 else -1
         if (direction == 'up' and gamemap.map[y + (1 if self.y % 1 != 0 else 0) - 1][x] != '#' and
                 gamemap.map[y + (1 if self.y % 1 != 0 else 0) - 1][x + (1 if self.x % 1 != 0 else 0)] != '#'):
@@ -438,6 +439,16 @@ class Player(pygame.sprite.Sprite):
             player.hp = HP if self.hp + 10 > HP else self.hp + 10
             player.inventory['Potion'] -= 1
 
+    def damage(self, damage):
+        if self.walk_animation:
+            self.image = load_image('player_' + self.direction + '_' + str(self.walk_animation) + '_damaged.png',
+                                    'player')
+        else:
+            self.image = load_image('player_' + self.direction + '_damaged.png', 'player')
+        self.hp -= damage
+        if self.hp <= 0:
+            self.kill()
+
 
 class Camera:
     def __init__(self):
@@ -471,13 +482,14 @@ class Monsters(pygame.sprite.Sprite):
         self.walk_animation = 1
 
     def move(self):
-        del monsters[self.coords]
-        self.rect = self.rect.move(self.direction[1] * tile_width / 2, self.direction[2] * tile_width / 2)
-        self.x += self.direction[1] * 0.5
-        self.y += self.direction[2] * 0.5
-        self.coords = self.x, self.y
-        self.walk_animation += 1 if self.walk_animation == 1 else -1
-        monsters[self.coords] = self
+        if self.direction[0] != 'None':
+            del monsters[self.coords]
+            self.rect = self.rect.move(self.direction[1] * tile_width / 2, self.direction[2] * tile_width / 2)
+            self.x += self.direction[1] * 0.5
+            self.y += self.direction[2] * 0.5
+            self.coords = self.x, self.y
+            self.walk_animation += 1 if self.walk_animation == 1 else -1
+            monsters[self.coords] = self
 
     def damage(self, type):
         if type == 'bullet':
@@ -492,7 +504,7 @@ class Monsters(pygame.sprite.Sprite):
     def attack(self, is_bat=False):
         self.attack_clock += self.attack_timer.tick()
         if self.attack_clock >= 1000:
-            player.hp -= self.DAMAGE
+            player.damage(self.DAMAGE)
             self.attack_clock = 0
             if is_bat:
                 bat_hit_sound.play()
@@ -506,20 +518,23 @@ class Monsters(pygame.sprite.Sprite):
             new_dir = possible_dir[new_dir if new_dir != len(possible_dir) else 0]
             return new_dir
         elif self.rage:
-            y_changed = self.way[0][1] - self.y
-            x_changed = self.way[0][0] - self.x
-            if y_changed != 0:
-                if y_changed > 0:
-                    return possible_dir[0]
-                elif y_changed < 0:
-                    return possible_dir[2]
-            elif x_changed != 0:
-                if x_changed > 0:
-                    return possible_dir[1]
-                elif x_changed < 0:
-                    return possible_dir[3]
+            if self.way:
+                y_changed = self.way[0][1] - self.y
+                x_changed = self.way[0][0] - self.x
+                if y_changed != 0:
+                    if y_changed > 0:
+                        return possible_dir[0]
+                    elif y_changed < 0:
+                        return possible_dir[2]
+                elif x_changed != 0:
+                    if x_changed > 0:
+                        return possible_dir[1]
+                    elif x_changed < 0:
+                        return possible_dir[3]
+                else:
+                    return self.direction
             else:
-                return self.direction
+                return (f'None_{self.direction[0]}', 0, 0)
 
     def update(self, direction):
         if not self.rage:
@@ -546,6 +561,8 @@ class Monsters(pygame.sprite.Sprite):
                 else:
                     del self.way[0]
             else:
+                self.direction = self.change_direction(self.direction)
+                self.move()
                 self.way.append((player.x, player.y))
 
 
@@ -557,7 +574,13 @@ class Bat(Monsters):
 
     def move(self):
         super().move()
-        self.image = load_image('bat_' + self.direction[0] + '_' + str(self.walk_animation) + '.png', 'bat')
+        if not self.direction[0].startswith('None_'):
+            self.image = load_image('frankenstein_' + self.direction[0] + '_' + str(self.walk_animation) + '.png',
+                                    'frankenstein')
+        else:
+            dir = self.direction[0]
+            dir = dir.lstrip('None_')
+            self.image = load_image('frankenstein_' + dir + '.png', 'frankenstein')
 
     def damage(self, type):
         super().damage(type)
@@ -573,7 +596,13 @@ class Dragon(Monsters):
 
     def move(self):
         super().move()
-        self.image = load_image('dragon_' + self.direction[0] + '_' + str(self.walk_animation) + '.png', 'dragon')
+        if not self.direction[0].startswith('None_'):
+            self.image = load_image('frankenstein_' + self.direction[0] + '_' + str(self.walk_animation) + '.png',
+                                    'frankenstein')
+        else:
+            dir = self.direction[0]
+            dir = dir.lstrip('None_')
+            self.image = load_image('frankenstein_' + dir + '.png', 'frankenstein')
 
     def damage(self, type):
         super().damage(type)
@@ -596,7 +625,13 @@ class SkeletonBomber(Monsters):
 
     def move(self):
         super().move()
-        self.image = load_image('skeleton_' + self.direction[0] + '_' + str(self.walk_animation) + '.png', 'skeleton')
+        if not self.direction[0].startswith('None_'):
+            self.image = load_image('frankenstein_' + self.direction[0] + '_' + str(self.walk_animation) + '.png',
+                                    'frankenstein')
+        else:
+            dir = self.direction[0]
+            dir = dir.lstrip('None_')
+            self.image = load_image('frankenstein_' + dir + '.png', 'frankenstein')
 
     def damage(self, type):
         super().damage(type)
@@ -612,7 +647,12 @@ class Frankenstein(Monsters):
 
     def move(self):
         super().move()
-        self.image = load_image('frankenstein_' + self.direction[0] + '_' + str(self.walk_animation) + '.png', 'frankenstein')
+        if not self.direction[0].startswith('None_'):
+            self.image = load_image('frankenstein_' + self.direction[0] + '_' + str(self.walk_animation) + '.png', 'frankenstein')
+        else:
+            dir = self.direction[0]
+            dir = dir.lstrip('None_')
+            self.image = load_image('frankenstein_' + dir + '.png', 'frankenstein')
 
     def damage(self, type):
         super().damage(type)
