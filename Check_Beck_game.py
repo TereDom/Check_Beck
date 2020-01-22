@@ -107,10 +107,9 @@ def generate_level(level):
     new_player = Player(*player_coords)
 
     gamemap = GameMap(98, 98, load_level('map.txt'))
-    game_start = True
     pygame.mixer.music.load('data/music/background.mp3')
     pygame.mixer.music.play(-1)
-    return gamemap, new_player, x, y, chests, gun, knife, monsters, door, game_start
+    return gamemap, new_player, x, y, chests, gun, knife, monsters, door
 
 
 def random_monster(name, coords, chest_coords):
@@ -143,7 +142,8 @@ class Inventory:
         self.minimap_coords = self.x + ((self.width - 194) // 2), height * 0.6
 
     def draw_health_bar(self):
-        screen.fill((51, 20, 20), pygame.Rect(self.x, 0, width, height))
+        COLOR = (51, 20, 20)
+        screen.fill((COLOR), pygame.Rect(self.x, 0, width, height))
         pygame.draw.rect(screen, (255, 255, 255), (self.x + ((self.width - int(self.width * 0.88)) // 2), 5,
                                                    (int(self.width * 0.88)), height * 0.07), 1)
 
@@ -155,34 +155,42 @@ class Inventory:
     def draw_slots(self):
         size_of_slots = 55
         size_of_map = 194
-        pygame.draw.rect(screen, (255, 255, 255), (self.x + ((self.width - int(self.width * 0.88)) // 2),
+        pygame.draw.rect(screen, pygame.color.Color('white'),
+                         (self.x + ((self.width - int(self.width * 0.88)) // 2),
                                                    height * 0.13, int(self.width * 0.88), height * 0.13), 1)
 
-        pygame.draw.rect(screen, (255, 255, 255) if player.active_weapon == 2 else (225, 204, 79),
+        pygame.draw.rect(screen, pygame.color.Color('white') if player.active_weapon == 2
+        else pygame.color.Color('yellow'),
                          (self.x + ((self.width - int(self.width * 0.88)) // 2) +
                           (int(self.width * 0.88) - size_of_slots * 2) // 4 - 1, height * 0.14 - 1,
                           size_of_slots + 2, size_of_slots + 2), 1)
 
-        pygame.draw.rect(screen, (255, 255, 255) if player.active_weapon == 1 else (225, 204, 79),
+        pygame.draw.rect(screen, pygame.color.Color('white') if player.active_weapon == 1
+        else pygame.color.Color('yellow'),
                          (self.x + ((self.width - int(self.width * 0.88)) // 2) +
                           int(self.width * 0.88) - (int(self.width * 0.88) - size_of_slots * 2) // 4
                           - size_of_slots - 1, height * 0.14 - 1, size_of_slots + 2, size_of_slots + 2), 1)
 
-        pygame.draw.rect(screen, (255, 255, 255), (self.x + ((self.width - int(self.width * 0.88)) // 2) - 1,
+        pygame.draw.rect(screen, pygame.color.Color('white'),
+                         (self.x + ((self.width - int(self.width * 0.88)) // 2) - 1,
                                                    height * 0.31 - 1, size_of_slots + 2, size_of_slots + 2), 1)
 
-        pygame.draw.rect(screen, (255, 255, 255), (self.x + ((self.width - int(self.width * 0.88)) // 2)
+        pygame.draw.rect(screen, pygame.color.Color('white'),
+                         (self.x + ((self.width - int(self.width * 0.88)) // 2)
                                                    + int(self.width * 0.88) - size_of_slots - 1, height * 0.31 - 1,
                                                    size_of_slots + 2, size_of_slots + 2), 1)
 
-        pygame.draw.rect(screen, (255, 255, 255), (self.x + ((self.width - int(self.width * 0.88)) // 2),
+        pygame.draw.rect(screen, pygame.color.Color('white'),
+                         (self.x + ((self.width - int(self.width * 0.88)) // 2),
                                                    height * 0.48, size_of_slots, size_of_slots), 1)
 
-        pygame.draw.rect(screen, (255, 255, 255), (self.x + ((self.width - int(self.width * 0.88)) // 2)
+        pygame.draw.rect(screen, pygame.color.Color('white'),
+                         (self.x + ((self.width - int(self.width * 0.88)) // 2)
                                                    + int(self.width * 0.88) - size_of_slots,
                                                    height * 0.48, size_of_slots, size_of_slots), 1)
 
-        pygame.draw.rect(screen, (255, 255, 255), (self.x + ((self.width - size_of_map) // 2),
+        pygame.draw.rect(screen, pygame.color.Color('white'),
+                         (self.x + ((self.width - size_of_map) // 2),
                                                    height * 0.6, size_of_map, size_of_map), 1)
 
     def get_minimap_coords(self):
@@ -1081,11 +1089,11 @@ class Menu(pygame.sprite.Sprite):
             self.exit()
 
     def play(self):
-        global game_start, gamemap, player, level_x, level_y, chests, gun, knife, monsters, door, minimap
-        gamemap, player, level_x, level_y, chests, gun, knife, monsters, door, game_start \
-            = generate_level(load_level('map.txt'))
-        minimap = MiniMap(len(gamemap.map), len(gamemap.map[0]), inventory.get_minimap_coords(), 2,
-                          (player.x, player.y))
+        global game_start
+        game_start = True
+
+        pygame.mixer.music.load('data/music/background.mp3')
+        pygame.mixer.music.play(-1)
 
     def load(self):
         pass
@@ -1096,8 +1104,10 @@ class Menu(pygame.sprite.Sprite):
 
 
 player_image = load_image('Player_down.png', 'player')
-gamemap, player, level_x, level_y, chests, gun, knife, monsters, door \
-    = None, None, None, None, None, None, None, None, None
+gamemap, player, level_x, level_y, chests, gun, knife, monsters, door\
+    = generate_level(load_level('map.txt'))
+minimap = MiniMap(len(gamemap.map), len(gamemap.map[0]), inventory.get_minimap_coords(), 2,
+                    (player.x, player.y))
 if pygame.joystick.get_count():
     stick = pygame.joystick.Joystick(0)
     stick.init()
@@ -1173,6 +1183,8 @@ while running:
                         player.hit()
                     if event.key == pygame.K_ESCAPE:
                         game_start = False
+                        pygame.mixer.music.load('data/music/menu.mp3')
+                        pygame.mixer.music.play(-1)
                     if event.key == pygame.K_F1:
                         game_paused = True if not game_paused else False
                         total_clock = pygame.time.Clock()
