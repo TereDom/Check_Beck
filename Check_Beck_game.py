@@ -2,13 +2,13 @@ import pygame
 import os
 import random
 import sys
-# import sqlite3
 
 
 pygame.init()
 
-# reservation = sqlite3.connect("data/reservation.db")
 
+gamemap, player, level_x, level_y, chests, gun, knife, monsters, door, minimap = \
+    None, None, None, None, None, None, None, None, None, None
 bullet_group = pygame.sprite.Group()
 creatures_group = pygame.sprite.Group()
 weapons_group = pygame.sprite.Group()
@@ -81,7 +81,6 @@ def load_level(filename):
 def generate_level(level):
     new_player, x, y, chests, monsters, door = None, None, None, dict(), dict(), None
     load_val = 0
-    # menu.image = load_image('loading.png') меню меняется на надпись загрузка
     for y in range(len(level)):
         for x in range(len(level[y])):
             if level[y][x] == '.':
@@ -121,18 +120,6 @@ def random_monster(name, coords, chest_coords):
         return SkeletonBomber(coords, chest_coords)
     elif name == 'Frankenstein':
         return Frankenstein(coords, chest_coords)
-
-
-# def save_results(): сохранение в бд
-#     cur = reservation.cursor()
-#     reqest = f"""UPDATE last_save
-#                 SET Map = {'gamemap.map'}
-#                 player_coords = {'player coords'}
-#                 player_direction = {player.direction}
-#                 monsters = {'monsters'})"""
-#     print(reqest)
-#     cur.execute(reqest).fetchall()
-#     reservation.commit()
 
 
 class Inventory:
@@ -1089,7 +1076,16 @@ class Menu(pygame.sprite.Sprite):
             self.exit()
 
     def play(self):
-        global game_start
+        global game_start, gamemap, player, level_x, level_y, chests, gun, knife, monsters, door, \
+            minimap
+        menu.image = load_image('loading.png')
+        menu_group.draw(screen)
+        pygame.display.flip()
+
+        gamemap, player, level_x, level_y, chests, gun, knife, monsters, door \
+            = generate_level(load_level('map.txt'))
+        minimap = MiniMap(len(gamemap.map), len(gamemap.map[0]), inventory.get_minimap_coords(), 2,
+                  (player.x, player.y))
         game_start = True
 
         pygame.mixer.music.load('data/music/background.mp3')
@@ -1104,10 +1100,7 @@ class Menu(pygame.sprite.Sprite):
 
 
 player_image = load_image('Player_down.png', 'player')
-gamemap, player, level_x, level_y, chests, gun, knife, monsters, door\
-    = generate_level(load_level('map.txt'))
-minimap = MiniMap(len(gamemap.map), len(gamemap.map[0]), inventory.get_minimap_coords(), 2,
-                    (player.x, player.y))
+
 if pygame.joystick.get_count():
     stick = pygame.joystick.Joystick(0)
     stick.init()
