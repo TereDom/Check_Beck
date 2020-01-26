@@ -3,9 +3,7 @@ import os
 import random
 import sys
 
-
 pygame.init()
-
 
 gamemap, player, level_x, level_y, chests, gun, knife, monsters, door, minimap = \
     None, None, None, None, None, None, None, None, None, None
@@ -29,6 +27,9 @@ tile_width = tile_height = 50
 HEALTH_BAR_SIZE = 178
 chests_found = 0
 HP = 50
+
+EXIT_BUTTON_COORDS = 425, 375
+START_BUTTON_COORDS = 425, 250
 
 screen = pygame.display.set_mode(size)
 amount_sprites = 47996
@@ -59,7 +60,8 @@ def show_progress(setMax, setVal):
     length_cur = int(length_pb / 100 * precent_cur)
     # Выводим прогресс бар
     sys.stderr.write(
-        '\rLoading: [' + '#' * length_cur + '.' * (length_pb - length_cur) + '] ' + str(precent_cur) + '%')
+        '\rLoading: [' + '#' * length_cur + '.' * (length_pb - length_cur) + '] ' +
+        str(precent_cur) + '%')
 
 
 def load_image(name, subfolder=None, colorkey=None):
@@ -91,7 +93,7 @@ def generate_level(level):
                 Tile("empty", x, y)
                 chests[(y, x)] = Chest((x, y))
                 monsters[(x - 1, y - 1)] = [random_monster(random.choices(LIST_OF_MONSTERS)[0],
-                                                          (x - 1, y - 1), (x, y))]
+                                                           (x - 1, y - 1), (x, y))]
             elif level[y][x] == '@':
                 Tile('empty', x, y)
                 player_coords = x, y
@@ -144,7 +146,7 @@ class Inventory:
         size_of_map = 194
         pygame.draw.rect(screen, pygame.color.Color('white'),
                          (self.x + ((self.width - int(self.width * 0.88)) // 2),
-                                                   height * 0.13, int(self.width * 0.88), height * 0.13), 1)
+                          height * 0.13, int(self.width * 0.88), height * 0.13), 1)
 
         pygame.draw.rect(screen, pygame.color.Color('white') if player.active_weapon == 2
         else pygame.color.Color('yellow'),
@@ -160,25 +162,25 @@ class Inventory:
 
         pygame.draw.rect(screen, pygame.color.Color('white'),
                          (self.x + ((self.width - int(self.width * 0.88)) // 2) - 1,
-                                                   height * 0.31 - 1, size_of_slots + 2, size_of_slots + 2), 1)
+                          height * 0.31 - 1, size_of_slots + 2, size_of_slots + 2), 1)
 
         pygame.draw.rect(screen, pygame.color.Color('white'),
                          (self.x + ((self.width - int(self.width * 0.88)) // 2)
-                                                   + int(self.width * 0.88) - size_of_slots - 1, height * 0.31 - 1,
-                                                   size_of_slots + 2, size_of_slots + 2), 1)
+                          + int(self.width * 0.88) - size_of_slots - 1, height * 0.31 - 1,
+                          size_of_slots + 2, size_of_slots + 2), 1)
 
         pygame.draw.rect(screen, pygame.color.Color('white'),
                          (self.x + ((self.width - int(self.width * 0.88)) // 2),
-                                                   height * 0.48, size_of_slots, size_of_slots), 1)
+                          height * 0.48, size_of_slots, size_of_slots), 1)
 
         pygame.draw.rect(screen, pygame.color.Color('white'),
                          (self.x + ((self.width - int(self.width * 0.88)) // 2)
-                                                   + int(self.width * 0.88) - size_of_slots,
-                                                   height * 0.48, size_of_slots, size_of_slots), 1)
+                          + int(self.width * 0.88) - size_of_slots,
+                          height * 0.48, size_of_slots, size_of_slots), 1)
 
         pygame.draw.rect(screen, pygame.color.Color('white'),
                          (self.x + ((self.width - size_of_map) // 2),
-                                                   height * 0.6, size_of_map, size_of_map), 1)
+                          height * 0.6, size_of_map, size_of_map), 1)
 
     def get_minimap_coords(self):
         return self.minimap_coords
@@ -349,7 +351,8 @@ class Player(pygame.sprite.Sprite):
         y = int(self.y)
         self.walk_animation += 1 if self.walk_animation == 1 else -1
         if (direction == 'up' and gamemap.map[y + (1 if self.y % 1 != 0 else 0) - 1][x] not in ('#', '*') and
-                gamemap.map[y + (1 if self.y % 1 != 0 else 0) - 1][x + (1 if self.x % 1 != 0 else 0)] not in ('#', '*')):
+                gamemap.map[y + (1 if self.y % 1 != 0 else 0) - 1][x + (1 if self.x % 1 != 0 else 0)]
+                not in ('#', '*')):
             self.rect = self.rect.move(0, -25)
             self.y -= 0.5
             self.image = load_image('Player_up.png', 'player')
@@ -376,7 +379,8 @@ class Player(pygame.sprite.Sprite):
                                     'player')
             self.coords = (self.x, self.y)
         elif (direction == 'left' and gamemap.map[y][x + (1 if self.x % 1 != 0 else 0) - 1] not in ('#', '*') and
-              gamemap.map[y + (1 if self.y % 1 != 0 else 0)][x + (1 if self.x % 1 != 0 else 0) - 1] not in ('#', '*')):
+              gamemap.map[y + (1 if self.y % 1 != 0 else 0)][x + (1 if self.x % 1 != 0 else 0) - 1]
+              not in ('#', '*')):
             self.rect = self.rect.move(-25, 0)
             self.x -= 0.5
             self.image = load_image('Player_left.png', 'player')
@@ -426,8 +430,8 @@ class Player(pygame.sprite.Sprite):
                 for monster in list(monster_list):
                     if ((monster.coords[0] - 0.5 <= self.coords[0]
                          + self.dir[self.direction][0] <= monster.coords[0] + 0.5
-                     and monster.coords[1] - 0.5 <= self.coords[1] +
-                     self.dir[self.direction][1] <= monster.coords[1] + 0.5)):
+                         and monster.coords[1] - 0.5 <= self.coords[1] +
+                         self.dir[self.direction][1] <= monster.coords[1] + 0.5)):
                         monster.damage('knife')
             hit_sound.play()
 
@@ -514,7 +518,7 @@ class Bat(Monsters):
             if self.i == 4:
                 self.direction = self.change_direction(self.direction)
                 self.i = 0
-            if (self.hp < 20) or (gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?'):
+            if (self.hp < 35) or (gamemap.map[self.CHEST_COORDS[1]][self.CHEST_COORDS[0]] == '?'):
                 self.rage = True
             self.attack_timer = pygame.time.Clock()
         if self.rage:
@@ -528,7 +532,7 @@ class Bat(Monsters):
                 if self.coords != self.way[0]:
                     self.move()
                     if abs(self.x - player.x) <= self.attack_radius and \
-                        abs(self.y - player.y) <= self.attack_radius:
+                            abs(self.y - player.y) <= self.attack_radius:
                         self.attack()
                 else:
                     del self.way[0]
@@ -898,9 +902,11 @@ class Bullet(pygame.sprite.Sprite):
             lst = list(monsters.values())
             for monster_list in lst:
                 for monster in list(monster_list):
-                    if ((monster.coords[0] - 0.5 <= self.coords[0] + self.dir[self.direction][0] <= monster.coords[0] + 0.5
-                        and monster.coords[1] - 0.5 <= self.coords[1] +
-                        self.dir[self.direction][1] <= monster.coords[1] + 0.5)):
+                    if (
+                    (monster.coords[0] - 0.5 <= self.coords[0] +
+                     self.dir[self.direction][0] <= monster.coords[0] + 0.5
+                     and monster.coords[1] - 0.5 <= self.coords[1] +
+                     self.dir[self.direction][1] <= monster.coords[1] + 0.5)):
                         monster.damage('bullet')
                         self.kill()
         elif self.master.__class__.__name__ == 'Dragon':
@@ -1015,31 +1021,28 @@ class Menu(pygame.sprite.Sprite):
         self.rect = self.image.get_rect().move(0, 0)
 
     def get_click(self, coords):
-        if 13 <= coords[0] <= 413 and 200 <= coords[1] <= 300:
+        if 225 <= coords[0] <= 625 and 200 <= coords[1] <= 300:
             self.play()
-        if 438 <= coords[0] <= 828 and 200 <= coords[1] <= 300:
-            self.load()
         if 225 <= coords[0] <= 625 and 325 <= coords[1] <= 425:
             self.exit()
 
     def play(self):
         global game_start, gamemap, player, level_x, level_y, chests, gun, knife, monsters, door, \
             minimap
-        menu.image = load_image('loading.png')
-        menu_group.draw(screen)
-        pygame.display.flip()
+        if gamemap is None:
+            menu.image = load_image('loading.png')
+            menu_group.draw(screen)
+            pygame.display.flip()
 
-        gamemap, player, level_x, level_y, chests, gun, knife, monsters, door \
-            = generate_level(load_level('map.txt'))
-        minimap = MiniMap(len(gamemap.map), len(gamemap.map[0]), inventory.get_minimap_coords(), 2,
-                  (player.x, player.y))
+            gamemap, player, level_x, level_y, chests, gun, knife, monsters, door \
+                = generate_level(load_level('map.txt'))
+            minimap = MiniMap(len(gamemap.map), len(gamemap.map[0]), inventory.get_minimap_coords(), 2,
+                          (player.x, player.y))
+            self.image = load_image('menu.png')
         game_start = True
 
         pygame.mixer.music.load('data/music/background.mp3')
         pygame.mixer.music.play(-1)
-
-    def load(self):
-        pass
 
     def exit(self):
         global running
@@ -1078,34 +1081,59 @@ game_paused = False
 helpful_images = HelpfulImages()
 menu = Menu()
 game_start = False
-
+is_first = False
 
 while running:
     screen.fill(pygame.color.Color("black"))
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
-        if event.type == pygame.MOUSEBUTTONDOWN:
+        if event.type == pygame.MOUSEBUTTONDOWN and game_start:
             menu.get_click(event.pos)
+        if event.type == pygame.JOYBUTTONDOWN:
+            if event.button == 7 and not game_start:
+                menu.get_click(START_BUTTON_COORDS)
+                is_first = True
+            elif event.button == 6 and not game_start:
+                menu.get_click(EXIT_BUTTON_COORDS)
+                is_first = True
         if game_start:
             if player.hp > 0:
                 if event.type == pygame.JOYHATMOTION:
                     direction, move, flag = set_direction_hat(event)
                 if event.type == pygame.JOYAXISMOTION:
                     set_direction_rs(player, stick)
-                    if event.type == pygame.JOYBUTTONDOWN:
-                        if event.button in [7, 6]:
-                            running = False
-                    if event.button == 0 and gamemap.map[int(player.y)][int(player.x)] == '!':
+                if event.type == pygame.JOYBUTTONDOWN:
+                    if event.button == 6:
+                        if not is_first:
+                            game_start = False
+                            pygame.mixer.music.load('data/music/menu.mp3')
+                            pygame.mixer.music.play(-1)
+                        else:
+                            is_first = False
+                    elif event.button == 7:
+                        if not is_first:
+                            game_paused = True if not game_paused else False
+                            total_clock = pygame.time.Clock()
+                        else:
+                            is_first = False
+                    elif event.button == 0 and gamemap.map[int(player.y)][int(player.x)] == '!':
                         chest = chests[(int(player.y), int(player.x))]
                         chest.open_chest()
                         player.inventory[chest.loot_name.type] += chest.loot_num
                         gamemap.map[int(player.y)][int(player.x)] = '?'
                         del chests[(int(player.y), int(player.x))]
-                    if event.button == 2:
+                    elif event.button == 2:
                         player.hit()
-                    if event.button == 1:
+                    elif event.button == 1:
                         player.heal()
+                    elif event.button == 3 and player.inventory['Key'] != 0 and gamemap.map[int(player.y) + 1][int(player.x)] == '*':
+                        player.inventory['Key'] -= 1
+                        door.open()
+                    elif event.button == 4:
+                        player.active_weapon = 1
+                    elif event.button == 5:
+                        player.active_weapon = 2
                 if event.type == pygame.KEYDOWN:
                     if gamemap.map[int(player.y)][int(player.x)] == '!' and event.key == pygame.K_e:
                         chest = chests[(int(player.y), int(player.x))]
@@ -1136,7 +1164,6 @@ while running:
                         event.key in [pygame.K_w, pygame.K_s, pygame.K_a, pygame.K_d]:
                     direction, move = set_direction_wasd(event)
     if game_start:
-
         if stick is not None and flag:
             direction, move = set_direction_ls(stick)
 
@@ -1153,7 +1180,7 @@ while running:
             if player.direction != direction:
                 player.update_direction(direction)
             else:
-                 player.update(direction)
+                player.update(direction)
             player_timer = 0
 
         if bul_timer >= 30:
@@ -1203,6 +1230,10 @@ while running:
         if not game_paused:
             total_timer += timer
 
+        font = pygame.font.Font(None, 20)
+        help_text = font.render('F1 - инструкция по управлению', 1, pygame.color.Color('white'))
+        screen.blit(help_text, (10, 0))
+
     if not game_start:
         menu_group.draw(screen)
     pygame.display.flip()
@@ -1210,3 +1241,4 @@ while running:
 if stick is not None:
     stick.quit()
 pygame.quit()
+
