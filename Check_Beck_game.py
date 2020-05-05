@@ -1050,9 +1050,10 @@ menu = Menu()
 player_image = load_image('Player_down.png', 'player')
 game_start = False
 
+
 def main():
     global menu, player_image, game_start, gamemap, player, level_x, level_y, chests, gun, knife, monsters, door, \
-            minimap
+            minimap, running
 
     if pygame.joystick.get_count():
         stick = pygame.joystick.Joystick(0)
