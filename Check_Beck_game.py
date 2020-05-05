@@ -1,8 +1,7 @@
+import pygame
 import os
 import random
 import sys
-import pygame
-
 
 pygame.init()
 
@@ -1027,14 +1026,16 @@ class Menu(pygame.sprite.Sprite):
     def play(self):
         global game_start, gamemap, player, level_x, level_y, chests, gun, knife, monsters, door, \
             minimap
-        menu.image = load_image('loading.png')
-        menu_group.draw(screen)
-        pygame.display.flip()
+        if gamemap is None:
+            menu.image = load_image('loading.png')
+            menu_group.draw(screen)
+            pygame.display.flip()
 
-        gamemap, player, level_x, level_y, chests, gun, knife, monsters, door \
-            = generate_level(load_level('map.txt'))
-        minimap = MiniMap(len(gamemap.map), len(gamemap.map[0]), inventory.get_minimap_coords(), 2,
+            gamemap, player, level_x, level_y, chests, gun, knife, monsters, door \
+                = generate_level(load_level('map.txt'))
+            minimap = MiniMap(len(gamemap.map), len(gamemap.map[0]), inventory.get_minimap_coords(), 2,
                           (player.x, player.y))
+            self.image = load_image('menu.png')
         game_start = True
 
         pygame.mixer.music.load('data/music/background.mp3')
